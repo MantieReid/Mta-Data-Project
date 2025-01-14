@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Define the path to your large CSV file
-file_path = 'mta_ridership.csv'
+file_path = 'MTA_Subway_Hourly_Ridership__Beginning_July_2020.csv'
 
 # Load the dataset using Dask for efficient processing of large files
 ddf = dd.read_csv(file_path, assume_missing=True)
