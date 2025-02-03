@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 file_path = 'MTA_Subway_Hourly_Ridership__Beginning_July_2020.csv'
 
 # Load the dataset using Dask for efficient processing of large files
-ddf = dd.read_csv(file_path, assume_missing=True)
+ddf = dd.read_csv(file_path, assume_missing=True, dtype={'station_complex_id': 'object'})
 
 # Filter for the specified stations
 filtered_ddf = ddf[ddf['station_complex'].isin(['Gun Hill Rd (5)', 'Gun Hill Rd (2,5)'])]
@@ -21,7 +21,7 @@ filtered_ddf = filtered_ddf.dropna(subset=['transit_timestamp'])
 filtered_ddf['hour'] = filtered_ddf['transit_timestamp'].dt.hour
 
 # Aggregate ridership counts by hour
-hourly_ridership = filtered_ddf.groupby('hour')['ridership_count'].sum().compute()
+hourly_ridership = filtered_ddf.groupby('hour')['ridership'].sum().compute()
 
 # Plot the bar chart
 plt.figure(figsize=(10, 6))
