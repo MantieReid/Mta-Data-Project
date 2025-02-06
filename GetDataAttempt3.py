@@ -1,12 +1,60 @@
 import requests
+"""
+This script fetches data from the MTA Data Project API, processes it, and saves the results to a CSV file.
+Modules:
+    - requests: To make HTTP requests to the API.
+    - pandas: To handle data manipulation and analysis.
+    - os: To interact with the operating system.
+    - random: To generate random numbers for unique filenames.
+    - concurrent.futures: To handle multithreading for concurrent data fetching.
+Functions:
+    - fetch_batch(skip): Fetches a batch of data from the API based on the skip parameter.
+Workflow:
+    1. Fetch the total number of records from the API.
+    2. Fetch data in batches of 50,000 records using multithreading.
+    3. Flatten the list of lists into a single dataset.
+    4. Convert the data to a pandas DataFrame.
+    5. Ensure the datetime column is in datetime format.
+    6. Extract date and hour from the datetime column.
+    7. Group the data by station_complex_id, station_complex, latitude, longitude, and hour.
+    8. Calculate the average ridership amount for each group.
+    9. Generate a unique filename if needed.
+    10. Save the results to a CSV file.
+Outputs:
+    - A CSV file containing the average ridership data, saved with a unique filename if necessary.
+"""
 import pandas as pd
 import os
 import random
+import json
 import concurrent.futures
 
 # Base API URL
-base_url = "https://data.ny.gov/api/odata/v4/wujg-7c2s"
+base_url = "https://data.ny.gov/api/odata/v4/wujg-7c2s"  # Data set with records from 2020-2024
 
+
+#we will remove data before 12-31-2022 due to the panaemic that skews the data. 
+_original_get = requests.get
+def new_get(url, *args, **kwargs):
+    resp = _original_get(url, *args, **kwargs)
+    if '$top' in url:
+        try:
+            data = resp.json().get('value', [])
+            # Only include records with transit_timestamp after December 31, 2022
+            filtered_data = [record for record in data if pd.to_datetime(record['transit_timestamp']) > pd.Timestamp('2022-12-31')]
+            resp._content = json.dumps({'value': filtered_data}).encode('utf-8')
+        except Exception:
+            pass
+    return resp
+requests.get = new_get
+base_url = "https://data.ny.gov/api/odata/v4/wujg-7c2s" # Data set that is for data between 2020-2024
+
+
+#
+
+
+
+requests.get = new_get
 # Set a large number of records to fetch
 # Fetch the total number of records from the API
 count_url = f"{base_url}/$count"
@@ -43,7 +91,7 @@ df = pd.DataFrame(all_data)
 # Ensure the datetime column is in datetime format
 df['transit_timestamp'] = pd.to_datetime(df['transit_timestamp'])
 
-# Extract date and hour
+# Extract date and hour from the datetime column
 df['date'] = df['transit_timestamp'].dt.date
 df['hour'] = df['transit_timestamp'].dt.hour
 
