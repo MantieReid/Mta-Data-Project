@@ -4,15 +4,24 @@ import concurrent.futures
 import time
 from datetime import datetime
 
-# API Key Variable
-API_KEY = "nssa5ESo6MsvtBcF7aIU6ZuJm"
+
+import configparser
+import os
+
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+API_KEY = os.getenv("API_KEY")  # Load from environment variables
+print(API_KEY)
+
 
 # Base URL
 BASE_URL = "https://data.ny.gov/resource/wujg-7c2s.json"
 
 # Parameters for fetching data
 LIMIT = 500000  # Reduce limit to prevent memory overload
-offsets = range(0, 10000000, LIMIT)  # Creating offsets in steps of LIMIT
+MAX_RECORDS = 10000000  # Stop after 10 million records
+offset = 0  # Start offset
 
 # Generate filename with timestamp
 timestamp = datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
@@ -24,7 +33,8 @@ def fetch_data(offset):
         "$$app_token": API_KEY,
         "$limit": LIMIT,
         "$offset": offset,
-        "$where": "transit_timestamp >= '2023-01-01T00:00:00' AND transit_timestamp <= '2024-12-31T23:59:59'"
+        "$where": "transit_timestamp >= '2023-01-01T00:00:00' AND transit_timestamp <= '2024-12-31T23:59:59'",
+        "$order": "transit_timestamp ASC"  # Sort results to ensure full range is included
     }
     
     response = requests.get(BASE_URL, params=params)
@@ -35,20 +45,32 @@ def fetch_data(offset):
         return []
     
     data = response.json()
+    
+    if not data:
+        print(f"No more data found at offset {offset}, stopping.")
+        return []
+
     print(f"Fetched {len(data)} records at offset {offset}")
+
     return data
 
 # Use multi-threading to fetch data faster without overloading memory
 data_list = []
+first_write = True  # Ensure header is only written once
+
 with open(filename, 'w', newline='', encoding='utf-8') as file:
-    first_write = True  # Ensure header is only written once
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-        results = executor.map(fetch_data, offsets)
-        
-        for result in results:
-            if result:
-                df = pd.DataFrame(result)
-                df.to_csv(file, index=False, header=first_write, mode='a')
-                first_write = False  # Disable headers after first write
+    while True:
+        data = fetch_data(offset)
+
+        if not data:
+            break  # Stop when no more data is returned
+
+        df = pd.DataFrame(data)
+
+        # Save to CSV incrementally
+        df.to_csv(file, index=False, header=first_write, mode='a')
+        first_write = False  # Ensure headers are written only once
+
+        offset += LIMIT  # Increment offset for next page
 
 print(f"Data saved to {filename}")
