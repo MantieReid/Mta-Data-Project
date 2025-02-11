@@ -5,7 +5,7 @@ from openpyxl.drawing.image import Image
 import os
 
 # Load the data
-file_path = "avg_ridership_per_hour.csv"  # Update to the path of your dataset
+file_path = "avg_ridership_2023.csv"  # Update to the path of your dataset
 df = pd.read_csv(file_path)
 
 # Convert military time (24-hour format) to 12-hour AM/PM format
@@ -54,7 +54,7 @@ for station_id in stations:
     ws.add_image(img, "A2")
 
 # Save the workbook
-excel_path = "station_charts_by_tab.xlsx"
+excel_path = "station_charts_by_tab_2023.xlsx"
 wb.save(excel_path)
 
 # Clean up image files
@@ -62,3 +62,4 @@ for station_id in stations:
     os.remove(f"station_{station_id}.png")
 
 print(f"Charts have been embedded in {excel_path}, with each station on a separate tab, using AM/PM time format.")
+ 
