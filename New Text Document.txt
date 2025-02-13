@@ -1,0 +1,22 @@
+/mta_data_project
+│── /src               # Source code
+│    ├── /data         # Data processing scripts
+│    │    ├── fetch_data.py      # Script to fetch MTA data
+│    │    ├── process_data.py    # Cleans and transforms data
+│    │    ├── analyze_data.py    # Performs data analysis
+│    │    ├── visualize_data.py  # Creates graphs/charts
+│    ├── /utils        # Helper scripts
+│    │    ├── logger.py          # Handles logging
+│    │    ├── config.py          # Stores configuration/settings
+│    ├── main.py        # Main script to run the project
+│── /config            # Configuration files (if applicable)
+│    ├── settings.yaml  # Configurations for API keys, file paths, etc.
+│── /data              # Raw and processed data (add .gitignore here)
+│── /tests             # Unit tests for your scripts
+│    ├── test_fetch_data.py
+│    ├── test_process_data.py
+│── /notebooks         # Jupyter Notebooks (if applicable)
+│── /docs              # Documentation (how to use the scripts)
+│── README.md          # Overview of the project
+│── requirements.txt   # Dependencies (e.g., pandas, matplotlib)
+│── .gitignore         # Ignore unnecessary files
