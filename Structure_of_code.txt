@@ -1,0 +1,30 @@
+/mta_data_project
+│── /src
+│    ├── /data_scripts              # Python scripts related to data
+│    │    ├── /analysis             # Scripts analyzing ridership trends
+│    │    │    ├── AverageNumberOfRiders.py
+│    │    │    ├── AverageNumberOfRiders2023and2024Sep.py
+│    │    │    ├── GetThatData.py
+
+│    │    ├── /charts               # Scripts for generating charts
+│    │    │    ├── CreateChartsForEachMonthINPowerPoint.py
+│    │    │    ├── CreateLineChartsForEachMonth.py
+│    │    │    ├── LineChartOfEachStationToESTTime.py
+│    │    │    ├── MakeALineChartOnEachStation.py
+│    │    ├── /station_info          # Scripts related to station details
+│    │    │    ├── GetFirstMonthOfTrainstation.py
+│    │    │    ├── GetListOfStationsWithID.py
+│    │    │    ├── GetTwoTrainStationsFromtheCSV.py
+		/GetData          # Scripts related Towards getting the data via the API
+│    │    │    ├── DownloadDataFromMtaThenSaveIt.py
+
+│── /config                         # Configuration files
+│── /data                           # Excel files and raw data
+│    ├── /raw                       # Raw MTA data (CSV/Excel)
+│    ├── /processed                 # Cleaned/structured data
+│    ├── /charts                    # Generated charts/images
+│    ├── /reports                   # Summary reports
+│── /tests                          # Unit tests
+│── README.md                       # Overview of the project
+│── requirements.txt                 # Dependencies
+│── .gitignore                       # Ignore unnecessary files
