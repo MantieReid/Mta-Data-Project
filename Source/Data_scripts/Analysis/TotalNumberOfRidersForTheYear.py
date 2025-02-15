@@ -65,6 +65,10 @@ top10_2024 = stations_2024.sort_values(by=ridership_column, ascending=False).hea
 with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
     workbook = writer.book
 
+    # Save full ridership data for each year
+    stations_2023.to_excel(writer, sheet_name="2023 Ridership", index=False)
+    stations_2024.to_excel(writer, sheet_name="2024 Ridership", index=False)
+
     # Define table styling
     table_style = {
         "border": 1,
@@ -109,4 +113,4 @@ with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
     worksheet_chart = workbook.add_worksheet("Top 10 Chart")
     worksheet_chart.insert_image("B2", str(chart_path))
 
-print(f"✅ Updated file with top 5 and top 10 ridership analysis saved to: {output_file}")
+print(f"✅ Updated file with full ridership data, percentages, top stations, and charts saved to: {output_file}")
