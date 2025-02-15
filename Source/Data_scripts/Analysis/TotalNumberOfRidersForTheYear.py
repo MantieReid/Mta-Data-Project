@@ -15,7 +15,7 @@ output_dir = base_dir / "Source" / "Data" / "reports"
 output_dir.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
 
 # Define the output file path
-output_file = output_dir / "MTA_Station_Top_Ridership.xlsx"
+output_file = output_dir / "MTA_Station_Ridership_Analysis.xlsx"
 
 # Check if file exists
 if not file_path.exists():
@@ -39,8 +39,8 @@ df["year"] = df[date_column].dt.year
 total_ridership_per_year = df.groupby("year")[ridership_column].sum()
 
 # Get total ridership numbers for 2023 and 2024
-official_ridership_2023 = total_ridership_per_year.get(2023, 0)  # Default to 0 if year not found
-official_ridership_2024 = total_ridership_per_year.get(2024, 0)  # Default to 0 if year not found
+official_ridership_2023 = total_ridership_per_year.get(2023, 0)
+official_ridership_2024 = total_ridership_per_year.get(2024, 0)
 
 print(f"✅ Total Subway Ridership in 2023: {official_ridership_2023}")
 print(f"✅ Total Subway Ridership in 2024: {official_ridership_2024}")
@@ -49,15 +49,19 @@ print(f"✅ Total Subway Ridership in 2024: {official_ridership_2024}")
 stations_2023 = df[df["year"] == 2023].groupby(station_column)[ridership_column].sum().reset_index()
 stations_2024 = df[df["year"] == 2024].groupby(station_column)[ridership_column].sum().reset_index()
 
-# --- 5. Get Top 5 Stations for Each Year ---
+# --- 5. Calculate Each Station's Percentage of Total Ridership ---
+stations_2023["percentage"] = (stations_2023[ridership_column] / official_ridership_2023) * 100 if official_ridership_2023 > 0 else 0
+stations_2024["percentage"] = (stations_2024[ridership_column] / official_ridership_2024) * 100 if official_ridership_2024 > 0 else 0
+
+# --- 6. Get Top 5 Stations for Each Year ---
 top5_2023 = stations_2023.sort_values(by=ridership_column, ascending=False).head(5)
 top5_2024 = stations_2024.sort_values(by=ridership_column, ascending=False).head(5)
 
-# --- 6. Get Top 10 Stations for Charting ---
+# --- 7. Get Top 10 Stations for Charting ---
 top10_2023 = stations_2023.sort_values(by=ridership_column, ascending=False).head(10)
 top10_2024 = stations_2024.sort_values(by=ridership_column, ascending=False).head(10)
 
-# --- 7. Save Results to Excel with Formatting ---
+# --- 8. Save Results to Excel with Formatting ---
 with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
     workbook = writer.book
 
@@ -86,7 +90,7 @@ with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
     write_top5("Top 5 Stations 2023", top5_2023, writer)
     write_top5("Top 5 Stations 2024", top5_2024, writer)
 
-    # --- 8. Create and Insert Bar Chart ---
+    # --- 9. Create and Insert Bar Chart ---
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.barh(top10_2023[station_column], top10_2023[ridership_column], label="2023", color="blue")
     ax.barh(top10_2024[station_column], top10_2024[ridership_column], label="2024", color="red", alpha=0.7)
