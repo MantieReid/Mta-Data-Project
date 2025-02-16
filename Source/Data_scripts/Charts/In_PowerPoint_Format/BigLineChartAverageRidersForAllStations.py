@@ -2,18 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pptx import Presentation
 from pptx.util import Inches
-from pathlib import Path
-
-# Define base directory
-base_dir = Path(__file__).resolve().parent.parent.parent
-
-# Define input and output directories
-input_dir = base_dir / "Data" / "Raw"
-output_dir = base_dir / "Data" / "reports"
-output_dir.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
 
 # Load the dataset
-file_path = input_dir / "MTA_Subway_Hourly_Ridership__2020-2024.csv"  # Change filename if needed
+file_path = "MTA_Ridership_Data_02-07-2025_23-25-21.csv"  # Update this path
 df = pd.read_csv(file_path)
 
 # Convert transit_timestamp to datetime format
@@ -55,7 +46,7 @@ plt.legend()
 plt.tight_layout()
 
 # Save chart as an image
-chart_filename = output_dir / "Average_Ridership_Per_Hour_2023_2024.png"
+chart_filename = "Average_Ridership_Per_Hour_2023_2024.png"
 plt.savefig(chart_filename)
 plt.close()
 
@@ -72,10 +63,10 @@ if title:
 left = Inches(1)
 top = Inches(1.5)
 height = Inches(5)
-slide.shapes.add_picture(str(chart_filename), left, top, height=height)
+slide.shapes.add_picture(chart_filename, left, top, height=height)
 
 # Save PowerPoint file
-ppt_path = output_dir / "Average_Ridership_Presentation.pptx"
+ppt_path = "Average_Ridership_Presentation.pptx"
 ppt.save(ppt_path)
 
 print(f"PowerPoint generated: {ppt_path}")
