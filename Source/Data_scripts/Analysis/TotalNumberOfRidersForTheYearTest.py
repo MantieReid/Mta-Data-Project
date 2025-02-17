@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from pptx import Presentation
 from pptx.util import Inches
 from pathlib import Path
+import warnings
 
+warnings.simplefilter(action='ignore', category=pd.errors.ParserWarning)
 # --- 1. Define Paths ---
 base_dir = Path(__file__).resolve().parents[3]
 input_dir = base_dir / "Source" / "Data" / "Raw"
@@ -28,7 +30,7 @@ agg_stations = []
 # Process chunks incrementally
 def process_chunk(chunk):
     chunk.dropna(subset=["transit_timestamp"], inplace=True)
-    chunk["transit_timestamp"] = pd.to_datetime(chunk["transit_timestamp"], errors='coerce')
+    chunk["transit_timestamp"] = pd.to_datetime(chunk["transit_timestamp"], format='%m/%d/%Y %I:%M:%S %p', errors='coerce')
     chunk.dropna(subset=["transit_timestamp"], inplace=True)
     chunk["year"] = chunk["transit_timestamp"].dt.year
     chunk["hour"] = chunk["transit_timestamp"].dt.hour
