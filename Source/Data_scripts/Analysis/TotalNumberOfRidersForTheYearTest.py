@@ -154,12 +154,14 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
         ax.set_title('Average Hourly Subway Ridership')
         ax.grid(True, linestyle='--', alpha=0.7)
 
-        hourly_chart_path = output_dir / "hourly_ridership_chart.png"
-        plt.savefig(hourly_chart_path, bbox_inches="tight", dpi=300)
+
+        #lets not include the hourly chart for now. It has to be fixed. The Number of riders keeps coming out as zero. I will fix it later.
+        #hourly_chart_path = output_dir / "hourly_ridership_chart.png"
+        #plt.savefig(hourly_chart_path, bbox_inches="tight", dpi=300)
         plt.close(fig)
 
-        worksheet_hourly = workbook.add_worksheet("Hourly Chart")
-        worksheet_hourly.insert_image("B2", str(hourly_chart_path))
+        #worksheet_hourly = workbook.add_worksheet("Hourly Chart")
+        #worksheet_hourly.insert_image("B2", str(hourly_chart_path))
         worksheet_chart = workbook.add_worksheet("Top 10 Chart")
         worksheet_chart.insert_image("B2", str(chart_path))
 
