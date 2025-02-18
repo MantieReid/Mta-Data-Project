@@ -104,25 +104,60 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
         write_as_table(top5_2023, "Top 5 Stations 2023", writer, use_color=True)
         write_as_table(top5_2024, "Top 5 Stations 2024", writer, use_color=True)
 
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(12, 8))
         top10_2023_plot = top10_2023.copy()
         top10_2024_plot = top10_2024.copy()
-        top10_2023_plot["ridership"] = pd.to_numeric(top10_2023["ridership"].str.replace(',', ''))
-        top10_2024_plot["ridership"] = pd.to_numeric(top10_2024["ridership"].str.replace(',', ''))
-        ax.barh(top10_2023_plot["station_complex"], top10_2023_plot["ridership"], label="2023", color="blue")
-        ax.barh(top10_2024_plot["station_complex"], top10_2024_plot["ridership"], label="2024", color="red", alpha=0.7)
+        top10_2023_plot["ridership"] = pd.to_numeric(top10_2023_plot["ridership"].str.replace(',', ''))
+        top10_2024_plot["ridership"] = pd.to_numeric(top10_2024_plot["ridership"].str.replace(',', ''))
 
+
+        bar_height = 0.35
+        #plot 2023 data
+        y_pos = range(len(top10_2023_plot))
+        ax.barh([i + bar_height for i in y_pos], 
+                top10_2023_plot["ridership"], 
+                height=bar_height,
+                label="2023",
+                color="#1f77b4",  # A more visible blue
+                alpha=0.8)
+        
+        #plot 2023 data
+        ax.barh([i for i in y_pos], 
+                top10_2024_plot["ridership"], 
+                height=bar_height,
+                label="2024",
+                color="#d62728",  # A more visible red
+                alpha=0.8)
+        
+        # Format axis and labels
         def format_with_commas(x, p):
             return f"{x:,.0f}"
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_with_commas))
-        ax.set_xlabel("Ridership")
-        ax.set_ylabel("Station Complex")
-        ax.set_title("Top 10 Subway Stations Ridership (2023 vs 2024)")
-        ax.legend()
-        plt.gca().invert_yaxis()
-        plt.tight_layout()
+        ax.set_xlabel("Ridership", fontsize=10, fontweight='bold')
+        ax.set_ylabel("Station Complex", fontsize=10, fontweight='bold')
+        ax.set_title("Top 10 Subway Stations Ridership Comparison (2023 vs 2024)", 
+                    fontsize=12, 
+                    fontweight='bold', 
+                    pad=20)
+       
+        # Adjust y-axis labels
+        ax.set_yticks([i + bar_height/2 for i in y_pos])
+        ax.set_yticklabels(top10_2023_plot["station_complex"], fontsize=9)
+       # Add gridlines for better readability
+        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
 
+        # Customize legend
+        ax.legend(bbox_to_anchor=(1.02, 1),  # Move to upper right corner
+                 loc='upper left',            # Align to upper left of the bbox_to_anchor point
+                 ncol=1,                      # Stack the legend items vertically
+                 fontsize=10,
+                 borderaxespad=0)             # Remove padding between axis and legend
+
+        # Adjust layout to make room for legend
+        plt.tight_layout()
+        
+        # When saving, ensure the legend is included in the output
         chart_path = output_dir / "top_10_ridership_chart.png"
         plt.savefig(chart_path, bbox_inches="tight", dpi=300)
         plt.close(fig)
