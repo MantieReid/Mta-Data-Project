@@ -104,99 +104,67 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
         write_as_table(top5_2023, "Top 5 Stations 2023", writer, use_color=True)
         write_as_table(top5_2024, "Top 5 Stations 2024", writer, use_color=True)
 
-        fig, ax = plt.subplots(figsize=(12, 8))
+        # Create the vertical bar chart
+        fig, ax = plt.subplots(figsize=(15, 8))
         top10_2023_plot = top10_2023.copy()
         top10_2024_plot = top10_2024.copy()
         top10_2023_plot["ridership"] = pd.to_numeric(top10_2023_plot["ridership"].str.replace(',', ''))
         top10_2024_plot["ridership"] = pd.to_numeric(top10_2024_plot["ridership"].str.replace(',', ''))
 
+        bar_width = 0.35
+        x = range(len(top10_2023_plot))
 
-        bar_height = 0.35
-        #plot 2023 data
-        y_pos = range(len(top10_2023_plot))
-        ax.barh([i + bar_height for i in y_pos], 
-                top10_2023_plot["ridership"], 
-                height=bar_height,
-                label="2023",
-                color="#1f77b4",  # A more visible blue
-                alpha=0.8)
-        
-        #plot 2023 data
-        ax.barh([i for i in y_pos], 
-                top10_2024_plot["ridership"], 
-                height=bar_height,
-                label="2024",
-                color="#d62728",  # A more visible red
-                alpha=0.8)
-        
+        # Plot 2023 data
+        ax.bar([i - bar_width/2 for i in x], 
+               top10_2023_plot["ridership"], 
+               bar_width,
+               label="2023",
+               color="#1f77b4",
+               alpha=0.8)
+
+        # Plot 2024 data
+        ax.bar([i + bar_width/2 for i in x], 
+               top10_2024_plot["ridership"], 
+               bar_width,
+               label="2024",
+               color="#d62728",
+               alpha=0.8)
+
         # Format axis and labels
         def format_with_commas(x, p):
             return f"{x:,.0f}"
 
-        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_with_commas))
-        ax.set_xlabel("Ridership", fontsize=10, fontweight='bold')
-        ax.set_ylabel("Station Complex", fontsize=10, fontweight='bold')
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_with_commas))
+        ax.set_ylabel("Ridership", fontsize=10, fontweight='bold')
+        ax.set_xlabel("Station Complex", fontsize=10, fontweight='bold')
         ax.set_title("Top 10 Subway Stations Ridership Comparison (2023 vs 2024)", 
                     fontsize=12, 
                     fontweight='bold', 
                     pad=20)
-       
-        # Adjust y-axis labels
-        ax.set_yticks([i + bar_height/2 for i in y_pos])
-        ax.set_yticklabels(top10_2023_plot["station_complex"], fontsize=9)
-       # Add gridlines for better readability
-        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
+
+        # Set x-axis labels
+        ax.set_xticks(x)
+        ax.set_xticklabels(top10_2023_plot["station_complex"], rotation=45, ha='right')
+
+        # Add gridlines for better readability
+        ax.grid(True, axis='y', linestyle='--', alpha=0.3)
 
         # Customize legend
-        ax.legend(bbox_to_anchor=(1.02, 1),  # Move to upper right corner
-                 loc='upper left',            # Align to upper left of the bbox_to_anchor point
-                 ncol=1,                      # Stack the legend items vertically
+        ax.legend(bbox_to_anchor=(1.02, 1),
+                 loc='upper left',
+                 ncol=1,
                  fontsize=10,
-                 borderaxespad=0)             # Remove padding between axis and legend
+                 borderaxespad=0)
 
-        # Adjust layout to make room for legend
+        # Adjust layout to prevent label cutoff
         plt.tight_layout()
-        
-        # When saving, ensure the legend is included in the output
+
+        # Save the chart
         chart_path = output_dir / "top_10_ridership_chart.png"
         plt.savefig(chart_path, bbox_inches="tight", dpi=300)
         plt.close(fig)
 
-        hourly_data = pd.Series(0, index=range(24))
-        hourly_counts = pd.Series(0, index=range(24))
-        for chunk in pd.read_csv(file_path, chunksize=chunksize, parse_dates=[date_column], date_format=date_format, low_memory=False):
-            chunk['hour'] = chunk[date_column].dt.hour
-            hourly_sum = chunk.groupby('hour')[ridership_column].sum()
-            hourly_count = chunk.groupby('hour').size()
-            hourly_data = hourly_data.add(hourly_sum, fill_value=0)
-            hourly_counts = hourly_counts.add(hourly_count, fill_value=0)
-
-        hourly_data = hourly_data / hourly_counts
-        hours = list(range(1, 24)) + [0]
-        hourly_data = hourly_data.reindex(hours)
-
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(range(24), hourly_data, marker='o')
-        hour_labels = [f'{h%12 if h%12 != 0 else 12}:00 {"AM" if h < 12 else "PM"}' for h in hours]
-        ax.set_xticks(range(24))
-        ax.set_xticklabels(hour_labels, rotation=45)
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'{int(x/1000)}K'))
-        hour_labels = [f'{h}:00' for h in (hours)]
-        ax.set_xticks(range(24))
-        ax.set_xticklabels(hour_labels, rotation=45)
-        ax.set_xlabel('Hour (EST)')
-        ax.set_ylabel('Average Ridership')
-        ax.set_title('Average Hourly Subway Ridership')
-        ax.grid(True, linestyle='--', alpha=0.7)
-
-
-        #lets not include the hourly chart for now. It has to be fixed. The Number of riders keeps coming out as zero. I will fix it later.
-        #hourly_chart_path = output_dir / "hourly_ridership_chart.png"
-        #plt.savefig(hourly_chart_path, bbox_inches="tight", dpi=300)
-        plt.close(fig)
-
-        #worksheet_hourly = workbook.add_worksheet("Hourly Chart")
-        #worksheet_hourly.insert_image("B2", str(hourly_chart_path))
+        # Add the chart to Excel
         worksheet_chart = workbook.add_worksheet("Top 10 Chart")
         worksheet_chart.insert_image("B2", str(chart_path))
 
