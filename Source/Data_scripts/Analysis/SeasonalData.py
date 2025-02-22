@@ -105,60 +105,60 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
 
 def create_top_stations_comparison_chart(data_2023, data_2024):
     """Create horizontal bar chart comparing seasonal ridership for top stations."""
-    # Set up the plot
-    fig, ax = plt.subplots(figsize=(15, 10))
+    # Set up the plot with increased height for even more spacing
+    fig, ax = plt.subplots(figsize=(15, 20))  
     
-    # Define colors for each year
+    # Define colors for each year and season
     colors_2023 = ['#94a3b8', '#86efac', '#fde047', '#fb923c']  # lighter colors for 2023
     colors_2024 = ['#475569', '#16a34a', '#ca8a04', '#ea580c']  # darker colors for 2024
     
-    # Set up positions for the bars
+    # Set up positions for the bars with much more spacing
     stations = data_2023.index
     seasons = ['Winter', 'Spring', 'Summer', 'Fall']
-    y_pos = np.arange(len(stations))
-    bar_height = 0.1
+    y_pos = np.arange(len(stations)) * 8  # Keep station group spacing
+    bar_height = 0.2  # Bar height
     
-    # Plot bars for each season
+    # Plot bars for each season with much more spacing
     for i, (season, color_2023, color_2024) in enumerate(zip(seasons, colors_2023, colors_2024)):
+        # Calculate positions with much more space between season groups and year pairs
+        pos_2023 = y_pos - bar_height * 6 + (i * bar_height * 5)  # Increased multiplier for seasonal spacing
+        pos_2024 = y_pos - bar_height * 3 + (i * bar_height * 5)  # Matched seasonal spacing multiplier
+        
         # 2023 bars
-        pos_2023 = y_pos - bar_height * 2 + (i * bar_height)
         bars_2023 = ax.barh(pos_2023, data_2023[season], height=bar_height, 
                            label=f'{season} 2023', color=color_2023)
         
         # 2024 bars
-        pos_2024 = y_pos - bar_height + (i * bar_height)
         bars_2024 = ax.barh(pos_2024, data_2024[season], height=bar_height,
                            label=f'{season} 2024', color=color_2024)
         
-        # Add value labels with proper spacing
+        # Add value labels only at the end of bars
         for j, (value_2023, value_2024) in enumerate(zip(data_2023[season], data_2024[season])):
             # Calculate offset based on maximum value
             offset = max(data_2023.max().max(), data_2024.max().max()) * 0.01
             
-            # 2023 label
+            # Only add labels at the end of bars
             ax.text(value_2023 + offset, pos_2023[j], f'{value_2023:,.0f}',
-                   va='center', ha='left', fontsize=8)
-            
-            # 2024 label
+                   va='center', ha='left', fontsize=10)
             ax.text(value_2024 + offset, pos_2024[j], f'{value_2024:,.0f}',
-                   va='center', ha='left', fontsize=8)
+                   va='center', ha='left', fontsize=10)
 
     # Customize the plot
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(stations)
+    ax.set_yticklabels(stations, fontsize=11)
     ax.invert_yaxis()
     
     # Add title and labels
-    plt.title('Top 5 Stations Seasonal Ridership Comparison (2023-2024)', pad=20)
-    plt.xlabel('Ridership')
+    plt.title('Top 5 Stations Seasonal Ridership Comparison (2023-2024)', pad=20, fontsize=14)
+    plt.xlabel('Ridership', fontsize=12)
     
     # Add gridlines
     ax.grid(axis='x', linestyle='--', alpha=0.7)
     
-    # Adjust legend
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Adjust legend position and size
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
     
-    # Adjust layout
+    # Adjust layout to prevent cutoff
     plt.tight_layout()
     
     return fig
