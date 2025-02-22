@@ -105,8 +105,8 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
 
 def create_top_stations_comparison_chart(data_2023, data_2024):
     """Create horizontal bar chart comparing seasonal ridership for top stations."""
-    # Set up the plot with increased height for even more spacing
-    fig, ax = plt.subplots(figsize=(15, 20))  
+    # Set up the plot with increased width and height
+    fig, ax = plt.subplots(figsize=(18, 20))  # Increased width from 15 to 18
     
     # Define colors for each year and season
     colors_2023 = ['#94a3b8', '#86efac', '#fde047', '#fb923c']  # lighter colors for 2023
@@ -115,14 +115,13 @@ def create_top_stations_comparison_chart(data_2023, data_2024):
     # Set up positions for the bars with much more spacing
     stations = data_2023.index
     seasons = ['Winter', 'Spring', 'Summer', 'Fall']
-    y_pos = np.arange(len(stations)) * 8  # Keep station group spacing
-    bar_height = 0.2  # Bar height
+    y_pos = np.arange(len(stations)) * 8
+    bar_height = 0.2
     
     # Plot bars for each season with much more spacing
     for i, (season, color_2023, color_2024) in enumerate(zip(seasons, colors_2023, colors_2024)):
-        # Calculate positions with much more space between season groups and year pairs
-        pos_2023 = y_pos - bar_height * 6 + (i * bar_height * 5)  # Increased multiplier for seasonal spacing
-        pos_2024 = y_pos - bar_height * 3 + (i * bar_height * 5)  # Matched seasonal spacing multiplier
+        pos_2023 = y_pos - bar_height * 6 + (i * bar_height * 5)
+        pos_2024 = y_pos - bar_height * 3 + (i * bar_height * 5)
         
         # 2023 bars
         bars_2023 = ax.barh(pos_2023, data_2023[season], height=bar_height, 
@@ -148,15 +147,23 @@ def create_top_stations_comparison_chart(data_2023, data_2024):
     ax.set_yticklabels(stations, fontsize=11)
     ax.invert_yaxis()
     
-    # Add title and labels
-    plt.title('Top 5 Stations Seasonal Ridership Comparison (2023-2024)', pad=20, fontsize=14)
-    plt.xlabel('Ridership', fontsize=12)
+    # Remove x-axis ticks and labels
+    ax.set_xticks([])
     
-    # Add gridlines
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    # Add title
+    plt.title('Top 5 Stations Seasonal Ridership Comparison (2023-2024)', pad=20, fontsize=14)
+    
+    # Remove x-axis label since we removed the ticks
+    ax.set_xlabel('')
+    
+    # Remove gridlines
+    ax.grid(False)
     
     # Adjust legend position and size
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
+    
+    # Add extra spacing on the right for numbers
+    ax.margins(x=0.1)  # Add 10% padding to the right
     
     # Adjust layout to prevent cutoff
     plt.tight_layout()
