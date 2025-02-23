@@ -55,7 +55,7 @@ def get_top_stations_data(seasonal_ridership, top_n=5):
     return df.loc[top_stations]
 
 def create_seasonal_comparison_chart(results_2023, results_2024):
-    """Creates a vertical bar chart comparing seasonal ridership between 2023 and 2024"""
+    """Creates a vertical bar chart comparing seasonal ridership between 2023 and 2024 without y-axis numbers"""
     # Convert the dictionaries to DataFrames and get the total ridership for each season
     df_2023 = pd.DataFrame.from_dict(results_2023, orient='index').sum()
     df_2024 = pd.DataFrame.from_dict(results_2024, orient='index').sum()
@@ -84,6 +84,9 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     
     # Add gridlines
     ax.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Remove y-axis numbers but keep the label
+    ax.set_yticklabels([])
     
     # Add value labels on top of each bar
     def autolabel(rects):
@@ -171,7 +174,7 @@ def create_top_stations_comparison_chart(data_2023, data_2024):
     return fig
 
 def save_results_to_excel(results_2023, results_2024, output_path):
-    """Saves the seasonal ridership results and charts to an Excel file."""
+    """Saves the seasonal ridership results and charts to an Excel file with formatted tables."""
     with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
         # Save 2023 data
         df_results_2023 = pd.DataFrame.from_dict(results_2023, orient='index').reset_index()
@@ -190,12 +193,59 @@ def save_results_to_excel(results_2023, results_2024, output_path):
         })
         df_comparison.to_excel(writer, sheet_name='Comparison', index=True)
         
-        # Get top 5 stations data
+        # Get workbook and add table formatting
+        workbook = writer.book
+        
+        # Define table style
+        table_style = {
+            'style': 'Table Style Medium 9',
+            'first_column': False,
+            'banded_rows': True,
+            'columns': [{'header': col} for col in df_results_2023.columns]
+        }
+        
+        # Format 2023 sheet
+        worksheet_2023 = writer.sheets['Ridership_2023']
+        worksheet_2023.add_table(
+            0, 0, 
+            len(df_results_2023), 
+            len(df_results_2023.columns) - 1, 
+            table_style
+        )
+        
+        # Format 2024 sheet
+        worksheet_2024 = writer.sheets['Ridership_2024']
+        worksheet_2024.add_table(
+            0, 0,
+            len(df_results_2024),
+            len(df_results_2024.columns) - 1,
+            table_style
+        )
+        
+        # Format comparison sheet
+        worksheet_comp = writer.sheets['Comparison']
+        comp_table_style = {
+            'style': 'Table Style Medium 9',
+            'first_column': True,
+            'banded_rows': True,
+            'columns': [
+                {'header': 'Season'},
+                {'header': '2023'},
+                {'header': '2024'}
+            ]
+        }
+        worksheet_comp.add_table(
+            0, 0,
+            len(df_comparison),
+            2,
+            comp_table_style
+        )
+        
+        # Get top 5 stations data and create charts
         top_stations_2023 = get_top_stations_data(results_2023)
         top_stations_2024 = get_top_stations_data(results_2024)
         
         # Create and save the overall comparison chart
-        workbook = writer.book
         worksheet = workbook.add_worksheet('Overall_Chart')
         
         fig_overall = create_seasonal_comparison_chart(results_2023, results_2024)
