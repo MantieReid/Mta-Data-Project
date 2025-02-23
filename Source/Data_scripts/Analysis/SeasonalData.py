@@ -196,12 +196,21 @@ def save_results_to_excel(results_2023, results_2024, output_path):
         # Get workbook and add table formatting
         workbook = writer.book
         
-        # Define table style
+        # Create a number format with commas
+        number_format = workbook.add_format({'num_format': '#,##0'})
+        
+        # Define table style with number formatting
         table_style = {
             'style': 'Table Style Medium 9',
             'first_column': False,
             'banded_rows': True,
-            'columns': [{'header': col} for col in df_results_2023.columns]
+            'columns': [
+                {'header': 'Station'},
+                {'header': 'Winter', 'format': number_format},
+                {'header': 'Spring', 'format': number_format},
+                {'header': 'Summer', 'format': number_format},
+                {'header': 'Fall', 'format': number_format}
+            ]
         }
         
         # Format 2023 sheet
@@ -213,6 +222,12 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             table_style
         )
         
+        # Format number columns in 2023 sheet with width
+        for col in range(1, 5):  # Columns B through E
+            worksheet_2023.set_column(col, col, 15, number_format)  # Set width to 15 characters
+        # Set station column width
+        worksheet_2023.set_column(0, 0, 30)  # Set width for station names
+        
         # Format 2024 sheet
         worksheet_2024 = writer.sheets['Ridership_2024']
         worksheet_2024.add_table(
@@ -222,6 +237,12 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             table_style
         )
         
+        # Format number columns in 2024 sheet with width
+        for col in range(1, 5):  # Columns B through E
+            worksheet_2024.set_column(col, col, 15, number_format)  # Set width to 15 characters
+        # Set station column width
+        worksheet_2024.set_column(0, 0, 30)  # Set width for station names
+        
         # Format comparison sheet
         worksheet_comp = writer.sheets['Comparison']
         comp_table_style = {
@@ -230,8 +251,8 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             'banded_rows': True,
             'columns': [
                 {'header': 'Season'},
-                {'header': '2023'},
-                {'header': '2024'}
+                {'header': '2023', 'format': number_format},
+                {'header': '2024', 'format': number_format}
             ]
         }
         worksheet_comp.add_table(
@@ -240,6 +261,10 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             2,
             comp_table_style
         )
+        
+        # Format number columns in comparison sheet with width
+        worksheet_comp.set_column(0, 0, 20)  # Width for Season column
+        worksheet_comp.set_column(1, 2, 15, number_format)  # Width for numeric columns
         
         # Get top 5 stations data and create charts
         top_stations_2023 = get_top_stations_data(results_2023)
