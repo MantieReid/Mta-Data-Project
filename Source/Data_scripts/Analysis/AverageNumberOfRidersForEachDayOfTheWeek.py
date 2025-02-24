@@ -66,7 +66,7 @@ def create_chart(avg_ridership, year, base_dir):
 
 def save_to_excel(avg_ridership_2023, avg_ridership_2024, base_dir):
     """Save both years' data to Excel"""
-    excel_path = os.path.join(base_dir, "Data", "processed", "average_ridership_analysis.xlsx")
+    excel_path = os.path.join(base_dir, "Data", "processed", "MTA_Subway_Ridership_Weekday_Stats_average.xlsx")
     
     with pd.ExcelWriter(excel_path, engine='xlsxwriter') as writer:
         workbook = writer.book
@@ -114,7 +114,7 @@ def create_powerpoint(chart_path_2023, chart_path_2024, base_dir):
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
 
     # Create PowerPoint presentation with date in filename
-    base_filename = f"average_ridership_analysis_{date_time_str}.pptx"
+    base_filename = f"MTA_Subway_Ridership_Weekday_Stats_Average{date_time_str}.pptx"
     ppt_dir = os.path.join(base_dir, "Data", "charts", "Powerpoint_format")
     os.makedirs(ppt_dir, exist_ok=True)
     ppt_path = os.path.join(ppt_dir, base_filename)
@@ -122,7 +122,7 @@ def create_powerpoint(chart_path_2023, chart_path_2024, base_dir):
     # Handle duplicate files
     counter = 1
     while os.path.exists(ppt_path):
-        base_filename = f"average_ridership_analysis_{date_time_str}_{counter}.pptx"
+        base_filename = f"average_ridership_For_All_Days_analysis_{date_time_str}_{counter}.pptx"
         ppt_path = os.path.join(ppt_dir, base_filename)
         counter += 1
 
@@ -156,8 +156,8 @@ def main():
 
     # Create output directories
     for dir_path in [
-        os.path.join(base_dir, "Data", "processed"),
-        os.path.join(base_dir, "Data", "charts", "Powerpoint_format")
+        os.path.join(base_dir, "Data", "reports"),
+        os.path.join(base_dir, "Data", "reports",)
     ]:
         os.makedirs(dir_path, exist_ok=True)
 
