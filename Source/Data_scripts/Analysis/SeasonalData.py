@@ -20,7 +20,11 @@ def calculate_seasonal_ridership_by_station(file_path, year, chunk_size=500000):
     seasonal_ridership = {}
     
     # Read CSV in chunks to optimize performance
-    for chunk in pd.read_csv(file_path, usecols=['transit_timestamp', 'ridership', 'station_complex'], parse_dates=['transit_timestamp'], chunksize=chunk_size):
+    for chunk in pd.read_csv(file_path, 
+                         usecols=['transit_timestamp', 'ridership', 'station_complex'], 
+                         parse_dates=['transit_timestamp'],
+                         date_format='%m/%d/%Y %I:%M:%S %p',
+                         chunksize=chunk_size):
         # Extract year and month
         chunk['year'] = chunk['transit_timestamp'].dt.year
         chunk['month'] = chunk['transit_timestamp'].dt.month
@@ -296,11 +300,37 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             worksheet.set_column('B:B', 120)
             worksheet.set_row(0, 20)
 
+def get_unique_filename(base_path):
+    """Generate a unique filename by adding a number if the file exists."""
+    directory = os.path.dirname(base_path)
+    filename = os.path.basename(base_path)
+    name, ext = os.path.splitext(filename)
+    
+    counter = 1
+    new_path = base_path
+    while os.path.exists(new_path):
+        new_path = os.path.join(directory, f"{name}_{counter}{ext}")
+        counter += 1
+    
+    return new_path
+
 def main():
     """Main function to execute seasonal ridership calculations and create visualizations."""
+    from datetime import datetime
+    
+    # Get current date and time
+    current_time = datetime.now()
+    date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
+    
     input_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "Raw")
-    file_path = os.path.join(input_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv")  # Ensure correct file name
-    output_path = os.path.join(input_dir, "Seasonal_Ridership_by_Station.xlsx")
+    file_path = os.path.join(input_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv")
+    
+    # Create filename with date and time
+    base_filename = f"Seasonal_Ridership_by_Station_{date_time_str}.xlsx"
+    output_path = os.path.join(input_dir, base_filename)
+    
+    # Get unique filename if file already exists
+    output_path = get_unique_filename(output_path)
     
     results_2023 = calculate_seasonal_ridership_by_station(file_path, 2023)
     results_2024 = calculate_seasonal_ridership_by_station(file_path, 2024)
