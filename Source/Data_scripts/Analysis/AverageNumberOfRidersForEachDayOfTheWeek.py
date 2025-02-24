@@ -4,6 +4,7 @@ from pptx import Presentation
 from pptx.util import Inches
 import os
 from pathlib import Path
+from datetime import datetime
 
 # Load the CSV file
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -106,17 +107,33 @@ chart_path = os.path.join(base_dir, "Data", "processed", "ridership_chart.png")
 plt.savefig(chart_path, dpi=300, bbox_inches='tight')
 plt.close()
 
-# Create PowerPoint presentation
-ppt_path = os.path.join(base_dir, "Data", "charts", "Powerpoint_format", "average_ridership_2023.pptx")
+# Get current date and time
+current_time = datetime.now()
+date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
+
+# Create PowerPoint presentation with date in filename
+base_filename = f"average_ridership_2023_{date_time_str}.pptx"
+ppt_dir = os.path.join(base_dir, "Data", "charts", "Powerpoint_format")
+os.makedirs(ppt_dir, exist_ok=True)
+ppt_path = os.path.join(ppt_dir, base_filename)
+
+# Handle duplicate files
+counter = 1
+while os.path.exists(ppt_path):
+    base_filename = f"average_ridership_2023_{date_time_str}_{counter}.pptx"
+    ppt_path = os.path.join(ppt_dir, base_filename)
+    counter += 1
+
+# Create the presentation
 prs = Presentation()
 slide_layout = prs.slide_layouts[5]  # Title Only layout
 slide = prs.slides.add_slide(slide_layout)
 title = slide.shapes.title
 title.text = "Average Daily Subway Ridership by Day of Week (2023)"
 
-# Add the chart image to the PowerPoint slide
+# Add the chart image to the PowerPoint slide with more space at the top
 left = Inches(1)
-top = Inches(1.5)
+top = Inches(2.5)  # Increased from 1.5 to 2.5 inches
 slide.shapes.add_picture(chart_path, left, top, width=Inches(8))
 
 # Save the PowerPoint file
