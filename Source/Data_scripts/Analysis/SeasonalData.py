@@ -322,7 +322,7 @@ def main():
     current_time = datetime.now()
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
     
-    input_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "Raw")
+    input_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "reports")
     file_path = os.path.join(input_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv")
     
     # Create filename with date and time
