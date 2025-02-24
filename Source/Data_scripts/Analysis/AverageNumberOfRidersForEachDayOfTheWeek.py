@@ -58,15 +58,29 @@ def create_chart(avg_ridership, year, base_dir):
     plt.tight_layout()
 
     # Save the chart
-    chart_path = os.path.join(base_dir, "Data", "processed", f"ridership_chart_{year}.png")
+    chart_path = os.path.join(base_dir, "Data", "reports", f"ridership_chart_{year}.png")
     plt.savefig(chart_path, dpi=300, bbox_inches='tight')
     plt.close()
     
     return chart_path
 
 def save_to_excel(avg_ridership_2023, avg_ridership_2024, base_dir):
-    """Save both years' data to Excel"""
-    excel_path = os.path.join(base_dir, "Data", "processed", "MTA_Subway_Ridership_Weekday_Stats_average.xlsx")
+    """Save both years' data to Excel with timestamp in filename"""
+    # Get current date and time
+    current_time = datetime.now()
+    date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
+    
+    # Create base filename with timestamp
+    base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}.xlsx"
+    excel_dir = os.path.join(base_dir, "Data", "processed")
+    excel_path = os.path.join(excel_dir, base_filename)
+    
+    # Handle duplicate files
+    counter = 1
+    while os.path.exists(excel_path):
+        base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}_{counter}.xlsx"
+        excel_path = os.path.join(excel_dir, base_filename)
+        counter += 1
     
     with pd.ExcelWriter(excel_path, engine='xlsxwriter') as writer:
         workbook = writer.book
@@ -114,15 +128,15 @@ def create_powerpoint(chart_path_2023, chart_path_2024, base_dir):
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
 
     # Create PowerPoint presentation with date in filename
-    base_filename = f"MTA_Subway_Ridership_Weekday_Stats_Average{date_time_str}.pptx"
-    ppt_dir = os.path.join(base_dir, "Data", "charts", "Powerpoint_format")
+    base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}.pptx"
+    ppt_dir = os.path.join(base_dir, "Data", "reports")
     os.makedirs(ppt_dir, exist_ok=True)
     ppt_path = os.path.join(ppt_dir, base_filename)
 
     # Handle duplicate files
     counter = 1
     while os.path.exists(ppt_path):
-        base_filename = f"average_ridership_For_All_Days_analysis_{date_time_str}_{counter}.pptx"
+        base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}_{counter}.pptx"
         ppt_path = os.path.join(ppt_dir, base_filename)
         counter += 1
 
