@@ -20,53 +20,121 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
     year_sums = {year: {} for year in years_to_analyze}
     year_counts = {year: {} for year in years_to_analyze}
     
-    # Convert years to strings for filtering
-    year_strings = [str(year) for year in years_to_analyze]
-    
     # Define the columns we need - this reduces memory by loading only necessary columns
     usecols = ['transit_timestamp', 'station_complex_id', 'station_complex', 
                'ridership']
     
-    # Create a parser function to efficiently extract year without loading entire timestamp
-    def parse_timestamp(x):
-        try:
-            dt = datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-            return dt
-        except (ValueError, TypeError):
-            return pd.NaT
-    
     print(f"Loading and processing data from {file_path} in chunks...")
     
+    # Read a sample to inspect the data
+    sample = pd.read_csv(file_path, nrows=5)
+    print("Sample data:")
+    print(sample[usecols].head() if all(col in sample.columns for col in usecols) else "Missing required columns")
+    
+    # Check if required columns exist
+    missing_cols = [col for col in usecols if col not in sample.columns]
+    if missing_cols:
+        print(f"Error: Missing required columns: {missing_cols}")
+        print(f"Available columns: {sample.columns.tolist()}")
+        return {}
+    
+    # Check timestamp format from sample
+    if 'transit_timestamp' in sample.columns and len(sample) > 0:
+        sample_timestamp = sample['transit_timestamp'].iloc[0]
+        print(f"Sample timestamp: {sample_timestamp}")
+        
+        # Try to determine timestamp format
+        formats_to_try = ['%Y-%m-%d %H:%M:%S', '%m/%d/%Y %H:%M:%S', '%d/%m/%Y %H:%M:%S', '%Y/%m/%d %H:%M:%S']
+        for fmt in formats_to_try:
+            try:
+                datetime.strptime(sample_timestamp, fmt)
+                print(f"Detected timestamp format: {fmt}")
+                detected_format = fmt
+                break
+            except ValueError:
+                continue
+        else:
+            print("Warning: Could not determine timestamp format")
+            detected_format = None
+    
     # Process the file in chunks
+    rows_processed = 0
+    rows_matching_years = 0
+    
     for chunk_num, chunk in enumerate(pd.read_csv(file_path, chunksize=chunk_size, usecols=usecols)):
         if chunk_num % 10 == 0:
             print(f"Processing chunk {chunk_num}...")
         
-        # Filter rows by year before processing to reduce memory usage
-        # This pre-filtering can drastically reduce the amount of data we need to process
-        chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
-        chunk.dropna(subset=['transit_timestamp'], inplace=True)
+        if chunk_num == 0:
+            # Print sample of first chunk for debugging
+            print("\nFirst 5 rows of first chunk:")
+            print(chunk.head())
+            print(f"\nData types: {chunk.dtypes}")
         
-        # Extract year and hour
+        # Clean data
+        # Ensure ridership is numeric
+        chunk['ridership'] = pd.to_numeric(chunk['ridership'], errors='coerce')
+        
+        # Convert timestamp to datetime 
+        if detected_format:
+            # Try with detected format first
+            try:
+                chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], 
+                                                          format=detected_format, 
+                                                          errors='coerce')
+            except Exception as e:
+                print(f"Warning: Error parsing timestamps with detected format: {e}")
+                # Fall back to automatic detection
+                chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
+        else:
+            # No format detected, use automatic detection
+            chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
+        
+        # Drop rows with invalid timestamps
+        valid_timestamps = chunk['transit_timestamp'].notna().sum()
+        if chunk_num == 0:
+            print(f"Valid timestamps in first chunk: {valid_timestamps} of {len(chunk)}")
+        
+        chunk = chunk.dropna(subset=['transit_timestamp'])
+        
+        # Extract year and hour from timestamp
         chunk['year'] = chunk['transit_timestamp'].dt.year
         chunk['hour'] = chunk['transit_timestamp'].dt.hour
+        
+        if chunk_num == 0:
+            # Check if there's data for our target years
+            years_present = chunk['year'].unique()
+            print(f"Years present in first chunk: {years_present}")
+            # Check if any of our target years are present
+            target_years_present = [y for y in years_to_analyze if y in years_present]
+            print(f"Target years present: {target_years_present}")
+            
+            if not target_years_present:
+                print("Warning: None of the target years are present in the first chunk!")
+                print("Consider changing years_to_analyze to match the data")
+        
+        rows_processed += len(chunk)
         
         # Filter for relevant years
         for year in years_to_analyze:
             year_chunk = chunk[chunk['year'] == year]
+            
+            if chunk_num % 10 == 0:
+                print(f"Chunk {chunk_num}: Found {len(year_chunk)} rows for year {year}")
+            
+            rows_matching_years += len(year_chunk)
             
             if not year_chunk.empty:
                 # Group by required columns and calculate sum and count
                 grouped = year_chunk.groupby([
                     'station_complex_id', 
                     'station_complex', 
-                    'hour', 
+                    'hour'
                 ])['ridership'].agg(['sum', 'count']).reset_index()
                 
                 # Process each group
                 for _, row in grouped.iterrows():
-                    key = (row['station_complex_id'], row['station_complex'], 
-                           row['hour'])
+                    key = (row['station_complex_id'], row['station_complex'], row['hour'])
                     
                     if key in year_sums[year]:
                         year_sums[year][key] += row['sum']
@@ -79,10 +147,16 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
         del chunk
         gc.collect()
     
+    print(f"\nProcessed {rows_processed} total rows")
+    print(f"Found {rows_matching_years} rows matching target years {years_to_analyze}")
+    
     # Calculate averages and create final dataframes
     result = {}
     for year in years_to_analyze:
         rows = []
+        key_count = len(year_sums[year])
+        print(f"Creating dataframe for year {year} with {key_count} station/hour combinations")
+        
         for key, total in year_sums[year].items():
             count = year_counts[year][key]
             avg = total / count if count > 0 else 0
@@ -94,7 +168,12 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
                 'ridership': avg
             })
         
-        result[year] = pd.DataFrame(rows)
+        if rows:
+            result[year] = pd.DataFrame(rows)
+            print(f"Created dataframe for year {year} with {len(rows)} rows")
+        else:
+            print(f"Warning: No data found for year {year}")
+            result[year] = pd.DataFrame(columns=['station_complex_id', 'station_complex', 'hour', 'ridership'])
         
         # Clear dictionaries to free memory
         year_sums[year].clear()
@@ -127,6 +206,7 @@ def save_results(df_dict, prefix="avg_ridership"):
         df = df_dict[year]
         filename = os.path.join(file_path_output, f"{prefix}_{year}.csv")
         df.to_csv(filename, index=False)
+        print(f"Saved {len(df)} rows to {filename}")
         filenames.append(filename)
         
         # Delete dataframe after saving to free memory
@@ -144,11 +224,29 @@ def main():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     file_path = os.path.join(base_dir, "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
     
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print(f"Error: File not found at {file_path}")
+        # Try the first_month1c.csv file as an alternative
+        alt_file_path = os.path.join(base_dir, "Data", "Raw", "first_month1c.csv")
+        if os.path.exists(alt_file_path):
+            print(f"Trying alternative file: {alt_file_path}")
+            file_path = alt_file_path
+        else:
+            print("Alternative file not found either. Please check file paths.")
+            return
+    
     # Years to analyze
     years_to_analyze = [2023, 2024]
     
+    print(f"Looking for data from years: {years_to_analyze}")
+    
     # Process data in chunks and calculate average ridership
     avg_ridership = process_data_in_chunks(file_path, years_to_analyze)
+    
+    if not avg_ridership:
+        print("Error: No data processed, check previous messages for details")
+        return
     
     # Save results
     print("Saving results...")
