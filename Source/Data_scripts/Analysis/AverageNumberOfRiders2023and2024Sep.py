@@ -2,6 +2,10 @@ import pandas as pd
 import os
 import gc
 from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
 def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
@@ -38,25 +42,6 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
         print(f"Available columns: {sample.columns.tolist()}")
         return {}
     
-    # Check timestamp format from sample
-    if 'transit_timestamp' in sample.columns and len(sample) > 0:
-        sample_timestamp = sample['transit_timestamp'].iloc[0]
-        print(f"Sample timestamp: {sample_timestamp}")
-        
-        # Try to determine timestamp format
-        formats_to_try = ['%Y-%m-%d %H:%M:%S', '%m/%d/%Y %H:%M:%S', '%d/%m/%Y %H:%M:%S', '%Y/%m/%d %H:%M:%S']
-        for fmt in formats_to_try:
-            try:
-                datetime.strptime(sample_timestamp, fmt)
-                print(f"Detected timestamp format: {fmt}")
-                detected_format = fmt
-                break
-            except ValueError:
-                continue
-        else:
-            print("Warning: Could not determine timestamp format")
-            detected_format = None
-    
     # Process the file in chunks
     rows_processed = 0
     rows_matching_years = 0
@@ -65,53 +50,19 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
         if chunk_num % 10 == 0:
             print(f"Processing chunk {chunk_num}...")
         
-        if chunk_num == 0:
-            # Print sample of first chunk for debugging
-            print("\nFirst 5 rows of first chunk:")
-            print(chunk.head())
-            print(f"\nData types: {chunk.dtypes}")
-        
         # Clean data
         # Ensure ridership is numeric
         chunk['ridership'] = pd.to_numeric(chunk['ridership'], errors='coerce')
         
         # Convert timestamp to datetime 
-        if detected_format:
-            # Try with detected format first
-            try:
-                chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], 
-                                                          format=detected_format, 
-                                                          errors='coerce')
-            except Exception as e:
-                print(f"Warning: Error parsing timestamps with detected format: {e}")
-                # Fall back to automatic detection
-                chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
-        else:
-            # No format detected, use automatic detection
-            chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
+        chunk['transit_timestamp'] = pd.to_datetime(chunk['transit_timestamp'], errors='coerce')
         
-        # Drop rows with invalid timestamps
-        valid_timestamps = chunk['transit_timestamp'].notna().sum()
-        if chunk_num == 0:
-            print(f"Valid timestamps in first chunk: {valid_timestamps} of {len(chunk)}")
-        
-        chunk = chunk.dropna(subset=['transit_timestamp'])
+        # Drop rows with invalid timestamps or ridership
+        chunk = chunk.dropna(subset=['transit_timestamp', 'ridership'])
         
         # Extract year and hour from timestamp
         chunk['year'] = chunk['transit_timestamp'].dt.year
         chunk['hour'] = chunk['transit_timestamp'].dt.hour
-        
-        if chunk_num == 0:
-            # Check if there's data for our target years
-            years_present = chunk['year'].unique()
-            print(f"Years present in first chunk: {years_present}")
-            # Check if any of our target years are present
-            target_years_present = [y for y in years_to_analyze if y in years_present]
-            print(f"Target years present: {target_years_present}")
-            
-            if not target_years_present:
-                print("Warning: None of the target years are present in the first chunk!")
-                print("Consider changing years_to_analyze to match the data")
         
         rows_processed += len(chunk)
         
@@ -119,7 +70,7 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
         for year in years_to_analyze:
             year_chunk = chunk[chunk['year'] == year]
             
-            if chunk_num % 10 == 0:
+            if chunk_num % 10 == 0 and len(year_chunk) > 0:
                 print(f"Chunk {chunk_num}: Found {len(year_chunk)} rows for year {year}")
             
             rows_matching_years += len(year_chunk)
@@ -160,24 +111,21 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
         for key, total in year_sums[year].items():
             count = year_counts[year][key]
             avg = total / count if count > 0 else 0
-            station_id, station_name, hour = key
+            _, station_name, hour = key  # Skip station_complex_id
             rows.append({
-                'station_complex_id': station_id,
                 'station_complex': station_name,
-                'hour': int(hour),  # Ensure hour is integer
-                'ridership': float(avg)  # Ensure ridership is float
+                'hour': int(hour),
+                'ridership': float(avg)
             })
         
         if rows:
             result[year] = pd.DataFrame(rows)
-            # Explicitly convert columns to numeric types
-            result[year]['hour'] = pd.to_numeric(result[year]['hour'], downcast='integer')
-            result[year]['ridership'] = pd.to_numeric(result[year]['ridership'], downcast='float')
+            # Sort by station_complex and hour for better readability
+            result[year] = result[year].sort_values(by=['station_complex', 'hour'])
             print(f"Created dataframe for year {year} with {len(rows)} rows")
-            print(f"Data types after conversion: {result[year].dtypes}")
         else:
             print(f"Warning: No data found for year {year}")
-            result[year] = pd.DataFrame(columns=['station_complex_id', 'station_complex', 'hour', 'ridership'])
+            result[year] = pd.DataFrame(columns=['station_complex', 'hour', 'ridership'])
         
         # Clear dictionaries to free memory
         year_sums[year].clear()
@@ -186,9 +134,9 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
     return result
 
 
-def save_results(df_dict, prefix="avg_ridership"):
+def save_results_to_excel(df_dict, prefix="avg_ridership"):
     """
-    Save dataframes to CSV files ensuring numeric values are preserved
+    Save dataframes to Excel files with table formatting (Dark Teal, Table Style Medium 2)
     
     Args:
         df_dict (dict): Dictionary with years as keys and dataframes as values
@@ -202,36 +150,76 @@ def save_results(df_dict, prefix="avg_ridership"):
     
     if not os.path.exists(file_path_output):
         os.makedirs(file_path_output)
+    
     filenames = []
-    # Create a list of years to safely iterate over
     years = list(df_dict.keys())
     
     for year in years:
         df = df_dict[year]
         
-        # Last check for numeric types
-        if 'ridership' in df.columns:
-            df['ridership'] = pd.to_numeric(df['ridership'], errors='coerce')
-            print(f"Ridership column dtype before saving: {df['ridership'].dtype}")
+        # Rename columns for better readability in the Excel table
+        df = df.rename(columns={
+            'station_complex': 'Station Name',
+            'hour': 'Hour',
+            'ridership': 'Average Ridership'
+        })
+        
+        # Create Excel file path
+        filename = os.path.join(file_path_output, f"{prefix}_{year}.xlsx")
+        
+        # Create Excel workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Ridership {year}"
+        
+        # Write headers
+        headers = list(df.columns)
+        for col_num, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col_num, value=header)
+        
+        # Write data
+        for row_idx, row in enumerate(dataframe_to_rows(df, index=False, header=False), 2):
+            for col_idx, value in enumerate(row, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                # Format the "Average Ridership" column to display as number with 2 decimal places
+                if col_idx == 3:  # The "Average Ridership" column
+                    cell.number_format = '0.00'
+        
+        # Create a table
+        table_ref = f"A1:{get_column_letter(len(headers))}{len(df) + 1}"
+        table = Table(displayName=f"RidershipTable{year}", ref=table_ref)
+        
+        # Set table style to "Table Style Medium 2" (Dark Teal)
+        style = TableStyleInfo(
+            name="TableStyleMedium2", 
+            showFirstColumn=False,
+            showLastColumn=False, 
+            showRowStripes=True, 
+            showColumnStripes=False
+        )
+        table.tableStyleInfo = style
+        
+        # Add the table to the worksheet
+        ws.add_table(table)
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
             
-            # Check for min/max to verify it's numeric
-            if not df.empty:
-                print(f"Ridership min: {df['ridership'].min()}, max: {df['ridership'].max()}")
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            
+            adjusted_width = (max_length + 2) * 1.2
+            ws.column_dimensions[column_letter].width = adjusted_width
         
-        # Save with float_format to specify precision and force numeric output
-        filename = os.path.join(file_path_output, f"{prefix}_{year}.csv")
-        df.to_csv(filename, index=False, float_format='%.2f', quoting=1)
-        
-        # Verify the file was saved correctly
-        print(f"Saved {len(df)} rows to {filename}")
-        
-        # Sample check - read back the first few rows to verify numeric data
-        try:
-            sample_read = pd.read_csv(filename, nrows=5)
-            print(f"Sample from saved file (types): {sample_read.dtypes}")
-            print(f"Sample values:\n{sample_read.head()}")
-        except Exception as e:
-            print(f"Warning: Could not verify saved file: {e}")
+        # Save the workbook
+        wb.save(filename)
+        print(f"Saved Excel file with formatted table: {filename}")
         
         filenames.append(filename)
         
@@ -274,13 +262,15 @@ def main():
         print("Error: No data processed, check previous messages for details")
         return
     
-    # Save results
-    print("Saving results...")
-    saved_files = save_results(avg_ridership)
+    # Save results to Excel with table formatting
+    print("Saving results to Excel with table formatting...")
+    saved_files = save_results_to_excel(avg_ridership)
     
     # Display the results
     for filename in saved_files:
         print(f"Average ridership saved to {filename}")
+    
+    print("Processing complete!")
 
 
 if __name__ == "__main__":
