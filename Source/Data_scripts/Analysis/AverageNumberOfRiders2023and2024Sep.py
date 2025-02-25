@@ -164,13 +164,17 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
             rows.append({
                 'station_complex_id': station_id,
                 'station_complex': station_name,
-                'hour': hour,
-                'ridership': avg
+                'hour': int(hour),  # Ensure hour is integer
+                'ridership': float(avg)  # Ensure ridership is float
             })
         
         if rows:
             result[year] = pd.DataFrame(rows)
+            # Explicitly convert columns to numeric types
+            result[year]['hour'] = pd.to_numeric(result[year]['hour'], downcast='integer')
+            result[year]['ridership'] = pd.to_numeric(result[year]['ridership'], downcast='float')
             print(f"Created dataframe for year {year} with {len(rows)} rows")
+            print(f"Data types after conversion: {result[year].dtypes}")
         else:
             print(f"Warning: No data found for year {year}")
             result[year] = pd.DataFrame(columns=['station_complex_id', 'station_complex', 'hour', 'ridership'])
@@ -184,7 +188,7 @@ def process_data_in_chunks(file_path, years_to_analyze, chunk_size=100000):
 
 def save_results(df_dict, prefix="avg_ridership"):
     """
-    Save dataframes to CSV files
+    Save dataframes to CSV files ensuring numeric values are preserved
     
     Args:
         df_dict (dict): Dictionary with years as keys and dataframes as values
@@ -204,9 +208,31 @@ def save_results(df_dict, prefix="avg_ridership"):
     
     for year in years:
         df = df_dict[year]
+        
+        # Last check for numeric types
+        if 'ridership' in df.columns:
+            df['ridership'] = pd.to_numeric(df['ridership'], errors='coerce')
+            print(f"Ridership column dtype before saving: {df['ridership'].dtype}")
+            
+            # Check for min/max to verify it's numeric
+            if not df.empty:
+                print(f"Ridership min: {df['ridership'].min()}, max: {df['ridership'].max()}")
+        
+        # Save with float_format to specify precision and force numeric output
         filename = os.path.join(file_path_output, f"{prefix}_{year}.csv")
-        df.to_csv(filename, index=False)
+        df.to_csv(filename, index=False, float_format='%.2f', quoting=1)
+        
+        # Verify the file was saved correctly
         print(f"Saved {len(df)} rows to {filename}")
+        
+        # Sample check - read back the first few rows to verify numeric data
+        try:
+            sample_read = pd.read_csv(filename, nrows=5)
+            print(f"Sample from saved file (types): {sample_read.dtypes}")
+            print(f"Sample values:\n{sample_read.head()}")
+        except Exception as e:
+            print(f"Warning: Could not verify saved file: {e}")
+        
         filenames.append(filename)
         
         # Delete dataframe after saving to free memory
