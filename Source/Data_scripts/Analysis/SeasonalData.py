@@ -326,7 +326,7 @@ def main():
     file_path = os.path.join(input_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv")
     
     # Create filename with date and time
-    base_filename = f"Seasonal_Ridership_by_Station_{date_time_str}.xlsx"
+    base_filename = f"Seasonal_Ridership_Data_by_Station_{date_time_str}.xlsx"
     output_path = os.path.join(input_dir, base_filename)
     
     # Get unique filename if file already exists

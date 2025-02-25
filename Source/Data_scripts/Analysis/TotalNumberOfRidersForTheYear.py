@@ -30,7 +30,7 @@ def define_paths():
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Create filename with date and time
-    base_filename = f"MTA_Station_Ridership_Analysis_{date_time_str}.xlsx"
+    base_filename = f"MTA_Station_Ridership_Yearly_Analysis_For_2023_and_2024{date_time_str}.xlsx"
     output_file = output_dir / base_filename
     
     # Get unique filename if file already exists

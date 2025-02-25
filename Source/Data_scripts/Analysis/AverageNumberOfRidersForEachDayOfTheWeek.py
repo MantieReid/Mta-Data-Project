@@ -128,7 +128,7 @@ def create_powerpoint(chart_path_2023, chart_path_2024, base_dir):
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
 
     # Create PowerPoint presentation with date in filename
-    base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}.pptx"
+    base_filename = f"Average Daily Subway Ridership by Day of Week_For_2023_and_2024{date_time_str}.pptx"
     ppt_dir = os.path.join(base_dir, "Data", "reports")
     os.makedirs(ppt_dir, exist_ok=True)
     ppt_path = os.path.join(ppt_dir, base_filename)
