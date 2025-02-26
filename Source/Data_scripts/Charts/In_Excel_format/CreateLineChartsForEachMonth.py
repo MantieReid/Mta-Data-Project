@@ -3,11 +3,22 @@ import matplotlib.pyplot as plt
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image
 import os
+from pathlib import Path
 
+
+
+
+base_dir = Path(__file__).resolve().parents[3]
+input_dir = base_dir / "Source" / "Data" / "Raw"
 # Load the dataset
-file_path = "MTA_Ridership_Data_02-07-2025_23-25-21.csv"  # Update to your actual file path
+file_path = input_dir / "MTA_Subway_Hourly_Ridership__2020-2024.csv"
+
 df = pd.read_csv(file_path)
 
+
+output_dir = base_dir / "Source" / "Data" / "reports"
+output_dir.mkdir(parents=True, exist_ok=True)
+    
 # Convert transit_timestamp to datetime format
 df["transit_timestamp"] = pd.to_datetime(df["transit_timestamp"], errors="coerce")
 
