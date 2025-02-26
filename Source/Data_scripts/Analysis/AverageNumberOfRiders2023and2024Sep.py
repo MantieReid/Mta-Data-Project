@@ -151,6 +151,13 @@ def save_results_to_excel(df_dict, prefix="avg_ridership"):
     if not os.path.exists(file_path_output):
         os.makedirs(file_path_output)
     
+    current_time = datetime.now()
+    date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
+
+
+    # Get current date and time in local timezone for filename with AM/PM format and better spacing
+    current_datetime = datetime.now().strftime("%Y_%m_%d_%I_%M_%S_%p")  # Using underscores between components
+    
     filenames = []
     years = list(df_dict.keys())
     
@@ -164,8 +171,8 @@ def save_results_to_excel(df_dict, prefix="avg_ridership"):
             'ridership': 'Average Ridership'
         })
         
-        # Create Excel file path
-        filename = os.path.join(file_path_output, f"{prefix}_{year}.xlsx")
+        # Create Excel file path with local date and time included
+        filename = os.path.join(file_path_output, f"{prefix}_{year}Made_On_{date_time_str}.xlsx")
         
         # Create Excel workbook
         wb = Workbook()
@@ -241,14 +248,7 @@ def main():
     # Check if file exists
     if not os.path.exists(file_path):
         print(f"Error: File not found at {file_path}")
-        # Try the first_month1c.csv file as an alternative
-        alt_file_path = os.path.join(base_dir, "Data", "Raw", "first_month1c.csv")
-        if os.path.exists(alt_file_path):
-            print(f"Trying alternative file: {alt_file_path}")
-            file_path = alt_file_path
-        else:
-            print("Alternative file not found either. Please check file paths.")
-            return
+        return
     
     # Years to analyze
     years_to_analyze = [2023, 2024]
