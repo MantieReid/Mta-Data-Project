@@ -13,6 +13,9 @@ CHUNK_SIZE = 100000  # Adjust based on available RAM
 current_dir = os.getcwd()
 project_root = os.path.abspath(os.path.join(current_dir, "..", "..", "..", ".."))
 file_path = os.path.join(project_root, "Source", "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
+file_path_OutPut = os.path.join(project_root, "Source", "Data", "reports")
+
+
 
 # Print file path for debugging
 print(f"Looking for data file at: {file_path}")
@@ -327,9 +330,10 @@ for year in [2023, 2024]:
             del station_df
             gc.collect()
         
-        # Save PowerPoint if charts were created
+        # Save PowerPoint to the specified output directory
         if chart_count > 0:
-            ppt_path = f"MTA_Ridership_{month}_{year}.pptx"
+            ppt_filename = f"MTA_Ridership_{month}_{year}.pptx"
+            ppt_path = os.path.join(file_path_OutPut, ppt_filename)
             ppt.save(ppt_path)
             print(f"PowerPoint generated with {chart_count} charts: {ppt_path}")
         else:
