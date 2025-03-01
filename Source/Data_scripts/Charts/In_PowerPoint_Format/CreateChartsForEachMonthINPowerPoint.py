@@ -302,7 +302,7 @@ for year in [2023]:
                 plt.legend()
                 
                 # Add watermark with your name - positioned lower and to the right
-                plt.figtext(0.45, 0.01, WATERMARK_TEXT, ha='center', color='gray', alpha=0.7, fontsize=10)
+                plt.figtext(0.45, -0.01, WATERMARK_TEXT, ha='center', color='gray', alpha=0.7, fontsize=10)
                 
                 plt.tight_layout()
                 
