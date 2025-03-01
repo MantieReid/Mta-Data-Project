@@ -322,12 +322,13 @@ def main():
     current_time = datetime.now()
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
     
-    input_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "reports")
+    input_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "raw")
     file_path = os.path.join(input_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv")
+    output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Data", "reports")
     
     # Create filename with date and time
     base_filename = f"Seasonal_Ridership_Data_by_Station_{date_time_str}.xlsx"
-    output_path = os.path.join(input_dir, base_filename)
+    output_path = os.path.join(output_dir, base_filename)
     
     # Get unique filename if file already exists
     output_path = get_unique_filename(output_path)
