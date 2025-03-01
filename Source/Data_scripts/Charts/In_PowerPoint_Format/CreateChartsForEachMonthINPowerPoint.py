@@ -8,14 +8,15 @@ import io  # Import io for BytesIO
 import traceback  # For better error reporting
 
 # Define chunk size for processing
-CHUNK_SIZE = 100000  # Adjust based on available RAM
+CHUNK_SIZE = 10000000  # Adjust based on available RAM
 
 current_dir = os.getcwd()
 project_root = os.path.abspath(os.path.join(current_dir, "..", "..", "..", ".."))
 file_path = os.path.join(project_root, "Source", "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
 file_path_OutPut = os.path.join(project_root, "Source", "Data", "reports")
 
-
+# Add watermark text
+WATERMARK_TEXT = "Created By Mantie Reid II"
 
 # Print file path for debugging
 print(f"Looking for data file at: {file_path}")
@@ -63,7 +64,7 @@ except Exception as e:
     print(f"Error reading sample data: {str(e)}")
 
 # Process data for both 2023 and 2024
-for year in [2023, 2024]:
+for year in [2023]:
     print(f"Processing data for year {year}")
     
     # Aggregation structure to store cumulative sums and counts
@@ -299,6 +300,10 @@ for year in [2023, 2024]:
                 plt.xticks(rotation=45)
                 plt.grid(True, linestyle='--', alpha=0.6)
                 plt.legend()
+                
+                # Add watermark with your name - positioned lower and to the right
+                plt.figtext(0.45, 0.01, WATERMARK_TEXT, ha='center', color='gray', alpha=0.7, fontsize=10)
+                
                 plt.tight_layout()
                 
                 # Save to BytesIO instead of file
