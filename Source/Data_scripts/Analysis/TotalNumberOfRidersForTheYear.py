@@ -4,6 +4,9 @@ from pathlib import Path
 import matplotlib.ticker as ticker
 from datetime import datetime
 
+# Add watermark text constant
+WATERMARK_TEXT = "Mantie Reid II"
+
 def get_unique_filename(base_path):
     """Generate a unique filename by adding a number if the file exists."""
     directory = base_path.parent
@@ -184,6 +187,9 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
                  ncol=1,
                  fontsize=10,
                  borderaxespad=0)
+                 
+        # Add watermark with your name - positioned at bottom right
+        plt.figtext(0.95, 0.01, WATERMARK_TEXT, ha='right', color='gray', alpha=0.7, fontsize=10)
 
         plt.tight_layout()
         
