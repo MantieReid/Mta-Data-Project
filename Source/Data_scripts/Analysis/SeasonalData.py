@@ -4,6 +4,9 @@ import numpy as np
 import os
 import io
 
+# Add watermark text constant
+WATERMARK_TEXT = "Mantie Reid II"
+
 def get_season(month):
     """Returns the season based on the month number."""
     if month in [12, 1, 2]:
@@ -105,6 +108,9 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     autolabel(rects1)
     autolabel(rects2)
     
+    # Add watermark with your name - positioned in the bottom right
+    plt.figtext(0.50, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
+    
     # Adjust layout to prevent label cutoff
     plt.tight_layout()
     
@@ -168,6 +174,9 @@ def create_top_stations_comparison_chart(data_2023, data_2024):
     
     # Adjust legend position and size
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
+    
+    # Add watermark with your name - positioned in the bottom right
+    plt.figtext(0.60, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
     
     # Add extra spacing on the right for numbers
     ax.margins(x=0.1)  # Add 10% padding to the right
