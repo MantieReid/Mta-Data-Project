@@ -6,6 +6,9 @@ import os
 from pathlib import Path
 from datetime import datetime
 
+# Add watermark text constant
+WATERMARK_TEXT = "Mantie Reid II"
+
 def process_year_data(chunks, year):
     """Process data for a specific year"""
     daily_ridership = pd.DataFrame()
@@ -36,14 +39,14 @@ def process_year_data(chunks, year):
 
 def create_chart(avg_ridership, year, base_dir):
     """Create and save a bar chart for the specified year"""
-    plt.figure(figsize=(12, 6))
-    bars = plt.bar(avg_ridership.index, avg_ridership.values, color='#1f77b4', alpha=0.8)
-    plt.xlabel("Day of the Week", fontsize=10, fontweight='bold')
-    plt.ylabel("Average Ridership", fontsize=10, fontweight='bold')
-    plt.title(f"Average Daily Subway Ridership by Day of Week ({year})", 
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.bar(avg_ridership.index, avg_ridership.values, color='#1f77b4', alpha=0.8)
+    ax.set_xlabel("Day of the Week", fontsize=10, fontweight='bold')
+    ax.set_ylabel("Average Ridership", fontsize=10, fontweight='bold')
+    ax.set_title(f"Average Daily Subway Ridership by Day of Week ({year})", 
               fontsize=12, fontweight='bold', pad=20)
     plt.xticks(rotation=45, ha="right")
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
 
     # Add value labels on top of bars
     def format_with_commas(x):
@@ -51,9 +54,14 @@ def create_chart(avg_ridership, year, base_dir):
 
     for bar in bars:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
+        ax.text(bar.get_x() + bar.get_width()/2., height,
                 format_with_commas(height),
                 ha='center', va='bottom')
+    
+    # Add watermark with your name - positioned in center with very low opacity
+    plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
+               color='gray', alpha=0.50, fontsize=24, 
+               rotation=30, transform=ax.transAxes)
 
     plt.tight_layout()
 
