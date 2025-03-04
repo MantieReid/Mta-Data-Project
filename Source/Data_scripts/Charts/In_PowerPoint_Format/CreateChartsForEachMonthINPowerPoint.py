@@ -64,7 +64,7 @@ except Exception as e:
     print(f"Error reading sample data: {str(e)}")
 
 # Process data for both 2023 and 2024
-for year in [2023]:
+for year in [2023,2024]:
     print(f"Processing data for year {year}")
     
     # Aggregation structure to store cumulative sums and counts
@@ -291,18 +291,20 @@ for year in [2023]:
             
             try:
                 # Create plot in memory with minimal memory usage
-                plt.figure(figsize=(10, 6))
-                plt.plot(station_df["AM_PM"], station_df["ridership"], marker='o', linestyle='-', 
-                         label=f"Avg Riders: {station_df['ridership'].mean():.2f}")
-                plt.title(f"Avg Ridership for {sanitized_station_name} - {month}/{year}", fontsize=16)
-                plt.xlabel("Time (EST)", fontsize=14)
-                plt.ylabel("Avg Riders", fontsize=14)
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(station_df["AM_PM"], station_df["ridership"], marker='o', linestyle='-', 
+                       label=f"Avg Riders: {station_df['ridership'].mean():.2f}")
+                ax.set_title(f"Avg Ridership for {sanitized_station_name} - {month}/{year}", fontsize=16)
+                ax.set_xlabel("Time (EST)", fontsize=14)
+                ax.set_ylabel("Avg Riders", fontsize=14)
                 plt.xticks(rotation=45)
-                plt.grid(True, linestyle='--', alpha=0.6)
-                plt.legend()
+                ax.grid(True, linestyle='--', alpha=0.6)
+                ax.legend()
                 
-                # Add watermark with your name - positioned lower and to the right
-                plt.figtext(0.45, -0.01, WATERMARK_TEXT, ha='center', color='gray', alpha=0.7, fontsize=10)
+                # Add watermark with your name - positioned in center with very low opacity
+                plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
+                           color='gray', alpha=0.15, fontsize=24, 
+                           rotation=30, transform=ax.transAxes)
                 
                 plt.tight_layout()
                 

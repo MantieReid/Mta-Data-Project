@@ -109,7 +109,10 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     autolabel(rects2)
     
     # Add watermark with your name - positioned in the bottom right
-    plt.figtext(0.50, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
+    #plt.figtext(0.50, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
+    plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
+                   color='gray', alpha=0.06, fontsize=40, 
+                   rotation=30, transform=ax.transAxes)
     
     # Adjust layout to prevent label cutoff
     plt.tight_layout()
@@ -176,8 +179,10 @@ def create_top_stations_comparison_chart(data_2023, data_2024):
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
     
     # Add watermark with your name - positioned in the bottom right
-    plt.figtext(0.60, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
-    
+    #plt.figtext(0.60, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
+    plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
+                   color='gray', alpha=0.06, fontsize=40, 
+                   rotation=30, transform=ax.transAxes)
     # Add extra spacing on the right for numbers
     ax.margins(x=0.1)  # Add 10% padding to the right
     
