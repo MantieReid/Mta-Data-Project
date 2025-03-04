@@ -188,8 +188,10 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
                  fontsize=10,
                  borderaxespad=0)
                  
-        # Add watermark with your name - positioned at bottom right
-        plt.figtext(0.95, 0.01, WATERMARK_TEXT, ha='right', color='gray', alpha=0.7, fontsize=10)
+        # Add watermark with your name - positioned in center with very low opacity
+        plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
+                   color='gray', alpha=0.15, fontsize=24, 
+                   rotation=30, transform=ax.transAxes)
 
         plt.tight_layout()
         
