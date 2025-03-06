@@ -1,5 +1,5 @@
 numpy
 matplotlib
 XlsxWriter
-pptx
+python-pptx
 openpyxl
