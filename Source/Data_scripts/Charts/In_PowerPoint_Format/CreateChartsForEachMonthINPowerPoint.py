@@ -10,10 +10,14 @@ import traceback  # For better error reporting
 # Define chunk size for processing
 CHUNK_SIZE = 10000000  # Adjust based on available RAM
 
+# Use os.path.join for cross-platform compatibility
 current_dir = os.getcwd()
-project_root = os.path.abspath(os.path.join(current_dir, "..", "..", "..", ".."))
-file_path = os.path.join(project_root, "Source", "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
-file_path_OutPut = os.path.join(project_root, "Source", "Data", "reports")
+base_dir = os.path.abspath(os.path.join(current_dir, "Source"))
+file_path = os.path.join(base_dir, "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
+file_path_OutPut = os.path.join(base_dir, "Data", "reports")
+
+# Make sure output directory exists
+os.makedirs(file_path_OutPut, exist_ok=True)
 
 # Add watermark text
 WATERMARK_TEXT = "Created By Mantie Reid II"
@@ -22,14 +26,36 @@ WATERMARK_TEXT = "Created By Mantie Reid II"
 print(f"Looking for data file at: {file_path}")
 if not os.path.exists(file_path):
     print(f"ERROR: File not found at {file_path}")
-    # Try to find the file in the current directory
-    alternative_path = "MTA_Subway_Hourly_Ridership__2020-2024.csv"
-    if os.path.exists(alternative_path):
-        print(f"Found file at alternative location: {alternative_path}")
-        file_path = alternative_path
+    # Look for the file in the current directory
+    current_dir = os.getcwd()
+    print(f"Current working directory: {current_dir}")
+    
+    # List files in current directory to help find the CSV
+    print("Files in current directory:")
+    for f in os.listdir(current_dir):
+        if f.endswith('.csv'):
+            print(f"  Found CSV: {f}")
+    
+    # Try some alternative locations
+    possible_paths = [
+        "MTA_Subway_Hourly_Ridership__2020-2024.csv",  # Current directory
+        os.path.join(current_dir, "MTA_Subway_Hourly_Ridership__2020-2024.csv"),
+        os.path.join(current_dir, "Data", "MTA_Subway_Hourly_Ridership__2020-2024.csv"),
+        "C:\\MTA_Subway_Hourly_Ridership__2020-2024.csv"
+    ]
+    
+    # Check each possible path
+    for alt_path in possible_paths:
+        if os.path.exists(alt_path):
+            print(f"Found file at alternative location: {alt_path}")
+            file_path = alt_path
+            break
     else:
-        print("Please provide the correct path to the CSV file.")
-        exit(1)
+        # Ask for manual input of file path
+        file_path = input("Please enter the full path to the CSV file: ")
+        if not os.path.exists(file_path):
+            print("File still not found. Exiting program.")
+            exit(1)
 
 # Define all possible hours for completeness
 hours = [f"{h % 12 if h % 12 != 0 else 12} {'AM' if h < 12 else 'PM'}" for h in range(24)]
