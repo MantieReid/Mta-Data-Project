@@ -19,7 +19,7 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
 
 1. **Download the dataset**:
    - The scripts extract data from the CSV, specifically from the dataset "MTA Subway Hourly Ridership: 2020-2024".
-   - Download the dataset as a CSV from [here](https://dev.socrata.com/foundry/data.ny.gov/wujg-7c2s) by clicking on "Export as Dataset as CSV".
+   - Download the dataset as a CSV from [here](https://dev.socrata.com/foundry/data.ny.gov/wujg-7c2s) by clicking on "Export dataset as CSV".
    - It will take a while to download the entire dataset. Go watch a movie while you wait.
 2. **Move the downloaded file**:
    - Move the downloaded file to `Source/Data/Raw`.
