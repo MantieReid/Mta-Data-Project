@@ -1,4 +1,5 @@
 # MTA Data Project
+![til](https://github.com/MantieReid/Mta-Data-Project/blob/main/Pictures/ExamplePictures/MonthlyPowerPointAvgRiders/ExampleOfPowerPointMonthly.gif)
 
 ## Overview
 
