@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project aims to analyze data from the MTA and visualize it into charts, tables, and more. The goal is to allow others to dive deep and find interesting trends about the MTA data. In the future, this data will also be displayed on a dedicated website to enhance accessibility and allow users to interact with the visualized trends dynamically.
+This project aims to analyze data from the MTA and visualize it into charts, tables, and more. The goal is to allow others to dive deep and find interesting trends about the MTA data. In the future, this data will also be displayed on a dedicated website to enhance accessibility and allow users to interact with the visualized trends etc. 
 
 ## Installation
 
