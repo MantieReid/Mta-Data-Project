@@ -26,22 +26,23 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
 2. **Move the downloaded file**:
    - Move the downloaded file to `Source/Data/Raw`.
 3. **Run the scripts**:
-   - The scripts can be run to extract and visualize data. The scripts can also be modified to use different datasets.
+   - Run the script and it will create the reports in `Source/Data/Reports`. 
 
 ## Script Descriptions
 
 - **SeasonalData.py** (Located in `Source/Data_scripts/Analysis/`):
 
-  - Analyzes MTA ridership by season for different stations and generates comparative visualizations for 2023 and 2024.
-  - Generates seasonal ridership comparison charts.
-  - Generates the table `Ridership_2023` and `Ridership_2024`, listing total ridership for each station in each season.
-  - Charts are located in the `Overall_Chart` and `Top_Stations_Chart` tabs of the exported file.
+ 
+  - Creates seasonal ridership comparison charts.
+  - Generates the table `Ridership_2023` and `Ridership_2024`, listing total ridership for each station for each season.
+  - `Top_Stations_chart` shows the top five stations for each season.
+  - `Overall_chart` shows the number of riders for each season compared with the two years 2023 and 2024. 
   - Exports results to: `Seasonal_Ridership_Data_by_Station_<date>.xlsx` in `Source/Data/reports/`.
 
 - **TotalNumberOfRidersForTheYear.py** (Located in `Source/Data_scripts/Analysis/`):
 
-  - Calculates the total subway ridership for each year and identifies the busiest stations.
-  - Generates top station ridership charts.
+  - Calculates the total subway ridership for each year and shows the busiest stations.
+  - Creates top station ridership charts.
   - Generates tables:
     - `2023 Ridership` and `2024 Ridership`: Contains total ridership for each station.
     - `Top 5 Stations 2023` and `Top 5 Stations 2024`: Lists the busiest stations by ridership.
@@ -50,31 +51,26 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
 
 - **AverageNumberOfRiders2023and2024Sep.py** (Located in `Source/Data_scripts/Analysis/`):
 
-  - Computes the average number of riders per hour for each station in 2023 and 2024.
+  - Shows the average number of riders per hour for each station in 2023 and 2024.
 
-  - Generates tables:
+  - Creates tables that shows the Average number of riders for each hour for each year. 
 
-    - `Ridership_<year>`: Lists average hourly ridership per station.
+  - `Ridership_<year>`: Lists average hourly ridership per station for the year.
 
-  - Exports results to: `avg_ridership_<year>Made_On_<date>.xlsx` in `Source/Data/reports/`. It will be in Two Separate excel files. 
+  - Exports results to: `avg_ridership_<year>Made_On_<date>.xlsx` in `Source/Data/reports/`. It will be in Two Separate excel files. One for 2023 and 2024.  
 
 - **AverageNumberOfRidersForEachDayOfTheWeek.py** (Located in `Source/Data_scripts/Analysis/`):
 
-  - Determines the average ridership for each day of the week and creates charts comparing different years.
-  - Generates daily ridership comparison charts.
-  - Generates tables:
-    - `2023 Average Ridership` and `2024 Average Ridership`: Lists average ridership for each day of the week.
-  - Charts are included in the exported PowerPoint file format and are not stored in the Excel file.
+  - Creates tables and charts that shows the average number of riders for each day of the week. 
+  - `2023 Average Ridership` and `2024 Average Ridership`: Lists average ridership for each day of the week.
+  - Tables are exported in Excel format. Charts are exported in the powerpoint format. 
   - Exports results to: `MTA_Subway_Ridership_Weekday_Stats_average_<date>.xlsx` and `Average Daily Subway Ridership by Day of Week_For_2023_and_2024_<date>.pptx` in `Source/Data/reports/`.
 
 - **CreateChartsForEachMonthINPowerPoint.py** (Located in `Source/Data_scripts/Charts/In_PowerPoint_Format/`):
 
-  - Generates PowerPoint presentations with monthly ridership charts for each station.
-
-  - Creates a Line Chart for each station that shows the average number of riders during the day. Shows peak hours and off peak hours, For each month. All the slides are put in separate PowerPoint files. 
-
-  - Generates PowerPoint files with charts per station for each month.
-
+  - Creates a line chart that shows the average number of riders for each station for each hour. Shows peak hours and off peak hours.
+  - Each month is put in a different powerpoint file.
+  - Over 400 slides for each powerpoint file.  
   - Exports results to: `MTA_Ridership_<month>_<year>.pptx` in `Source/Data/reports/`.
 
 ## Future Plans
