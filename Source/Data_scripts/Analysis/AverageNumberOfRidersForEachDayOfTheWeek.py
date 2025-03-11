@@ -80,7 +80,7 @@ def save_to_excel(avg_ridership_2023, avg_ridership_2024, base_dir):
     
     # Create base filename with timestamp
     base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}.xlsx"
-    excel_dir = os.path.join(base_dir, "Data", "processed")
+    excel_dir = os.path.join(base_dir, "Data", "reports")
     excel_path = os.path.join(excel_dir, base_filename)
     
     # Handle duplicate files
