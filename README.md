@@ -4,7 +4,9 @@
 ## Overview
 
 This project aims to analyze data from the MTA and visualize it into charts, tables, and more. The goal is to allow others to dive deep and find interesting trends about the MTA data. In the future, this data will also be displayed on a dedicated website to enhance accessibility and allow users to interact with the visualized trends etc. 
-
+## 
+- Example Files of the charts and tables can be found in `Source/Data/reports/Example`. 
+- Link to the example folder -> [Example Folder](https://github.com/MantieReid/Mta-Data-Project/tree/main/Source/Data/reports/Example)
 ## Installation
 
 1. **Clone the Repository**:
