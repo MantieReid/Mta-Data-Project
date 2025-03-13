@@ -54,6 +54,7 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
   - Exports results to: `MTA_Station_Ridership_Yearly_Analysis_For_2023_and_2024_<date>.xlsx` in `Source/Data/reports/`.
 
 - **AverageNumberOfRiders2023and2024Sep.py** (Located in `Source/Data_scripts/Analysis/`):
+![image](https://github.com/user-attachments/assets/9511dd40-c1f8-482a-9173-0d660d79be6f)
 
   - Shows the average number of riders per hour for each station in 2023 and 2024.
 
@@ -64,7 +65,7 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
   - Exports results to: `avg_ridership_<year>Made_On_<date>.xlsx` in `Source/Data/reports/`. It will be in Two Separate excel files. One for 2023 and 2024.  
 
 - **AverageNumberOfRidersForEachDayOfTheWeek.py** (Located in `Source/Data_scripts/Analysis/`):
-![image](https://github.com/user-attachments/assets/9511dd40-c1f8-482a-9173-0d660d79be6f)
+![image](https://github.com/user-attachments/assets/16713bb4-c621-42c9-b4d7-65a47c6240c8)
 
 
   - Creates tables and charts that shows the average number of riders for each day of the week. 
