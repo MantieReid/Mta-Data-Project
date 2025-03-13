@@ -36,8 +36,7 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
 ## Script Descriptions
 
 - **SeasonalData.py** (Located in `Source/Data_scripts/Analysis/`):
-
- 
+![til]( https://github.com/MantieReid/Mta-Data-Project/blob/main/Pictures/ExamplePictures/SeasonalRiderShip/BarChartForEachSeason.png)
   - Creates seasonal ridership comparison charts.
   - Generates the table `Ridership_2023` and `Ridership_2024`, listing total ridership for each station for each season.
   - `Top_Stations_chart` shows the top five stations for each season.
@@ -66,12 +65,14 @@ This project aims to analyze data from the MTA and visualize it into charts, tab
 
 - **AverageNumberOfRidersForEachDayOfTheWeek.py** (Located in `Source/Data_scripts/Analysis/`):
 
+
   - Creates tables and charts that shows the average number of riders for each day of the week. 
   - `2023 Average Ridership` and `2024 Average Ridership`: Lists average ridership for each day of the week.
   - Tables are exported in Excel format. Charts are exported in the powerpoint format. 
   - Exports results to: `MTA_Subway_Ridership_Weekday_Stats_average_<date>.xlsx` and `Average Daily Subway Ridership by Day of Week_For_2023_and_2024_<date>.pptx` in `Source/Data/reports/`.
 
 - **CreateChartsForEachMonthINPowerPoint.py** (Located in `Source/Data_scripts/Charts/In_PowerPoint_Format/`):
+- ![til](https://github.com/MantieReid/Mta-Data-Project/blob/main/Pictures/ExamplePictures/MonthlyPowerPointAvgRiders/ExampleOfPowerPointMonthly.gif)
 
   - Creates a line chart that shows the average number of riders for each station for each hour. Shows peak hours and off peak hours.
   - Each month is put in a different powerpoint file.
