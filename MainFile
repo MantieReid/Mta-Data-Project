@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""
+MTA Data Analysis Main Controller
+
+This script serves as the main entry point for the MTA data analysis suite.
+It orchestrates the execution of various analysis modules and chart generation tools.
+
+Usage:
+    python main.py [--all] [--avg-day] [--total-year] [--seasonal] [--avg-2023-2024] [--monthly-charts]
+
+Options:
+    --all              Run all analysis modules
+    --avg-day          Run average ridership by day of week analysis
+    --total-year       Run total yearly ridership analysis 
+    --seasonal         Run seasonal ridership analysis
+    --avg-2023-2024    Run 2023-2024 average ridership comparison
+    --monthly-charts   Create monthly PowerPoint charts
+"""
+
+import os
+import sys
+import argparse
+import importlib.util
+import time
+import logging
+from datetime import datetime
+
+# Setup logging
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Source", "Data", "reports", "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, f"mta_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger("MTA_Analysis")
+
+# Paths to analysis scripts
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ANALYSIS_DIR = os.path.join(SCRIPT_DIR, "Source", "Data_scripts", "Analysis")
+CHARTS_DIR = os.path.join(SCRIPT_DIR, "Source", "Data_scripts", "Charts", "In_PowerPoint_Format")
+
+SCRIPTS = {
+    "avg_day": os.path.join(ANALYSIS_DIR, "AverageNumberOfRidersForEachDayOfTheWeek.py"),
+    "total_year": os.path.join(ANALYSIS_DIR, "TotalNumberOfRidersForTheYear.py"),
+    "seasonal": os.path.join(ANALYSIS_DIR, "SeasonalData.py"),
+    "avg_2023_2024": os.path.join(ANALYSIS_DIR, "AverageNumberOfRiders2023and2024Sep.py"),
+    "monthly_charts": os.path.join(CHARTS_DIR, "CreateChartsForEachMonthINPowerPoint.py")
+}
+
+def run_script(script_path, script_name):
+    """
+    Run a Python script by path
+    """
+    logger.info(f"Starting {script_name} script...")
+    start_time = time.time()
+    
+    try:
+        # Load the script as a module
+        spec = importlib.util.spec_from_file_location(script_name, script_path)
+        if not spec or not spec.loader:
+            logger.error(f"Could not load {script_path}")
+            return False
+            
+        module = importlib.util.module_from_spec(spec)
+        if not module:
+            logger.error(f"Could not create module from {script_path}")
+            return False
+            
+        spec.loader.exec_module(module)
+        
+        # If the module has a main function, call it
+        if hasattr(module, 'main'):
+            module.main()
+        # Otherwise assume the script runs on import
+        
+        elapsed_time = time.time() - start_time
+        logger.info(f"Completed {script_name} script in {elapsed_time:.2f} seconds")
+        return True
+    except Exception as e:
+        logger.error(f"Error running {script_name}: {str(e)}")
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description="MTA Data Analysis Suite")
+    parser.add_argument("--all", action="store_true", help="Run all analysis modules")
+    parser.add_argument("--avg-day", action="store_true", help="Run average ridership by day of week analysis")
+    parser.add_argument("--total-year", action="store_true", help="Run total yearly ridership analysis")
+    parser.add_argument("--seasonal", action="store_true", help="Run seasonal ridership analysis")
+    parser.add_argument("--avg-2023-2024", action="store_true", help="Run 2023-2024 average ridership comparison")
+    parser.add_argument("--monthly-charts", action="store_true", help="Create monthly PowerPoint charts")
+    
+    args = parser.parse_args()
+    
+    # Default to running all if no specific option is selected
+    run_all = args.all or not any([args.avg_day, args.total_year, args.seasonal, 
+                                  args.avg_2023_2024, args.monthly_charts])
+    
+    successful_scripts = 0
+    total_scripts = 0
+    
+    logger.info("Starting MTA Data Analysis Suite")
+    
+    # Check which scripts to run
+    if run_all or args.avg_day:
+        total_scripts += 1
+        if run_script(SCRIPTS["avg_day"], "Average Ridership by Day of Week"):
+            successful_scripts += 1
+    
+    if run_all or args.total_year:
+        total_scripts += 1
+        if run_script(SCRIPTS["total_year"], "Total Yearly Ridership"):
+            successful_scripts += 1
+    
+    if run_all or args.seasonal:
+        total_scripts += 1
+        if run_script(SCRIPTS["seasonal"], "Seasonal Ridership"):
+            successful_scripts += 1
+    
+    if run_all or args.avg_2023_2024:
+        total_scripts += 1
+        if run_script(SCRIPTS["avg_2023_2024"], "Average Ridership 2023-2024 Comparison"):
+            successful_scripts += 1
+    
+    if run_all or args.monthly_charts:
+        total_scripts += 1
+        if run_script(SCRIPTS["monthly_charts"], "Monthly PowerPoint Charts"):
+            successful_scripts += 1
+    
+    # Summary
+    logger.info(f"Analysis complete. {successful_scripts}/{total_scripts} scripts executed successfully.")
+    
+    if successful_scripts < total_scripts:
+        logger.warning("Some scripts failed to execute. Check logs for details.")
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

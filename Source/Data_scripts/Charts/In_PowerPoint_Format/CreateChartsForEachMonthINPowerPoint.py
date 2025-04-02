@@ -13,8 +13,8 @@ CHUNK_SIZE = 10000000  # Adjust based on available RAM
 # Use os.path.join for cross-platform compatibility
 current_dir = os.getcwd()
 base_dir = os.path.abspath(os.path.join(current_dir))
-file_path = os.path.join(base_dir, "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
-file_path_OutPut = os.path.join(base_dir, "Data", "reports")
+file_path = os.path.join(base_dir, "Source", "Data", "Raw", "MTA_Subway_Hourly_Ridership__2020-2024.csv")
+file_path_OutPut = os.path.join(base_dir, "Source", "Data", "reports")
 
 # Make sure output directory exists
 os.makedirs(file_path_OutPut, exist_ok=True)

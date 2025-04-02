@@ -5,3 +5,5 @@ config.ini
 Untitled.ipynb
 
 Source/Data/Raw/MTA_Subway_Hourly_Ridership__2020-2024.csv
+Source/Data_scripts/Analysis/__pycache__/SeasonalData.cpython-313.pyc
+*.pyc
