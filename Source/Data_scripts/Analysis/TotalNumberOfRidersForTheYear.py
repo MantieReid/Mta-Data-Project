@@ -8,6 +8,7 @@ from datetime import datetime
 WATERMARK_TEXT = "Mantie Reid II"
 
 def get_unique_filename(base_path):
+    print("Checking if file exists...")
     """Generate a unique filename by adding a number if the file exists."""
     directory = base_path.parent
     stem = base_path.stem
@@ -18,10 +19,11 @@ def get_unique_filename(base_path):
     while new_path.exists():
         new_path = directory / f"{stem}_{counter}{suffix}"
         counter += 1
-    
+    print(f"Unique filename generated: {new_path}")
     return new_path
 
 def define_paths():
+    print("🚀 Starting the process...")
     # Get current date and time
     current_time = datetime.now()
     date_time_str = current_time.strftime("%B %d, %Y %I-%M %p")
@@ -45,6 +47,7 @@ def define_paths():
     return file_path, output_file, output_dir
 
 def load_data(file_path, chunksize=100000):
+    print(f"📊 Loading data from: {file_path}")
     date_column = "transit_timestamp"
     ridership_column = "ridership"
     station_column = "station_complex"
@@ -77,6 +80,7 @@ def load_data(file_path, chunksize=100000):
     return total_ridership_per_year, stations_2023, stations_2024
 
 def process_data(total_ridership_per_year, stations_2023, stations_2024):
+    print("📈 Processing data...")
     official_ridership_2023 = total_ridership_per_year.get(2023, 0)
     official_ridership_2024 = total_ridership_per_year.get(2024, 0)
 
@@ -98,6 +102,7 @@ def process_data(total_ridership_per_year, stations_2023, stations_2024):
     return stations_2023, stations_2024, top5_2023, top5_2024, top10_2023, top10_2024
 
 def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_2024, top10_2023, top10_2024, output_dir, file_path, ridership_column, chunksize=100000, date_column="transit_timestamp", date_format='%m/%d/%Y %I:%M:%S %p'):
+    print(f"📝 Writing data to Excel file: {output_file}")
     with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
         workbook = writer.book
         

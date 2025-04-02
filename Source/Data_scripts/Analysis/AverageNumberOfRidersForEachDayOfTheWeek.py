@@ -15,6 +15,7 @@ def process_year_data(chunks, year):
     
     for chunk in chunks:
         # Filter data for the specified year and create a copy
+        print(f"Processing chunk for {year}...")
         mask = chunk["transit_timestamp"].dt.year == year
         chunk_filtered = chunk[mask].copy()
         
@@ -38,6 +39,7 @@ def process_year_data(chunks, year):
     return avg_ridership
 
 def create_chart(avg_ridership, year, base_dir):
+    print(f"Creating chart for {year}...")
     """Create and save a bar chart for the specified year"""
     fig, ax = plt.subplots(figsize=(12, 6))
     bars = ax.bar(avg_ridership.index, avg_ridership.values, color='#1f77b4', alpha=0.8)
@@ -59,6 +61,7 @@ def create_chart(avg_ridership, year, base_dir):
                 ha='center', va='bottom')
     
     # Add watermark with your name - positioned in center with very low opacity
+    print("Adding watermark...")
     plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
                color='gray', alpha=0.50, fontsize=24, 
                rotation=30, transform=ax.transAxes)
@@ -66,6 +69,7 @@ def create_chart(avg_ridership, year, base_dir):
     plt.tight_layout()
 
     # Save the chart
+    print("Saving chart...")
     chart_path = os.path.join(base_dir, "Data", "reports", f"ridership_chart_{year}.png")
     plt.savefig(chart_path, dpi=300, bbox_inches='tight')
     plt.close()
@@ -73,6 +77,7 @@ def create_chart(avg_ridership, year, base_dir):
     return chart_path
 
 def save_to_excel(avg_ridership_2023, avg_ridership_2024, base_dir):
+    print("Saving to Excel...")
     """Save both years' data to Excel with timestamp in filename"""
     # Get current date and time
     current_time = datetime.now()
@@ -84,6 +89,7 @@ def save_to_excel(avg_ridership_2023, avg_ridership_2024, base_dir):
     excel_path = os.path.join(excel_dir, base_filename)
     
     # Handle duplicate files
+    print("Checking for duplicate files...")
     counter = 1
     while os.path.exists(excel_path):
         base_filename = f"MTA_Subway_Ridership_Weekday_Stats_average_{date_time_str}_{counter}.xlsx"

@@ -23,6 +23,7 @@ def calculate_seasonal_ridership_by_station(file_path, year, chunk_size=500000):
     seasonal_ridership = {}
     
     # Read CSV in chunks to optimize performance
+    print(f"Processing data for {year}...")
     for chunk in pd.read_csv(file_path, 
                          usecols=['transit_timestamp', 'ridership', 'station_complex'], 
                          parse_dates=['transit_timestamp'],
@@ -55,6 +56,7 @@ def calculate_seasonal_ridership_by_station(file_path, year, chunk_size=500000):
     return seasonal_ridership
 
 def get_top_stations_data(seasonal_ridership, top_n=5):
+    print(f"Getting top {top_n} stations...")
     """Convert seasonal ridership dictionary to DataFrame and get top N stations."""
     df = pd.DataFrame.from_dict(seasonal_ridership, orient='index')
     total_ridership = df.sum(axis=1)
@@ -62,12 +64,14 @@ def get_top_stations_data(seasonal_ridership, top_n=5):
     return df.loc[top_stations]
 
 def create_seasonal_comparison_chart(results_2023, results_2024):
+    print("Creating seasonal comparison chart...")
     """Creates a vertical bar chart comparing seasonal ridership between 2023 and 2024 without y-axis numbers"""
     # Convert the dictionaries to DataFrames and get the total ridership for each season
     df_2023 = pd.DataFrame.from_dict(results_2023, orient='index').sum()
     df_2024 = pd.DataFrame.from_dict(results_2024, orient='index').sum()
     
     # Set up the data for plotting
+    print("Creating seasonal comparison chart...")
     seasons = ['Winter', 'Spring', 'Summer', 'Fall']
     width = 0.35  # width of the bars
     
@@ -82,6 +86,7 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     rects2 = ax.bar(x + width/2, df_2024, width, label='2024', color='#82ca9d')
     
     # Customize the plot
+    print("Customizing the plot...")
     ax.set_title('Seasonal Ridership Comparison (2023 vs 2024)', pad=20)
     ax.set_xlabel('Season')
     ax.set_ylabel('Total Ridership')
@@ -110,6 +115,7 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     
     # Add watermark with your name - positioned in the bottom right
     #plt.figtext(0.50, 0.10, WATERMARK_TEXT, ha='left', color='gray', alpha=0.7, fontsize=10)
+    print("Adding watermark...")
     plt.figtext(0.5, 0.5, WATERMARK_TEXT, ha='center', va='center', 
                    color='gray', alpha=0.06, fontsize=40, 
                    rotation=30, transform=ax.transAxes)
@@ -120,6 +126,7 @@ def create_seasonal_comparison_chart(results_2023, results_2024):
     return fig
 
 def create_top_stations_comparison_chart(data_2023, data_2024):
+    print ("Creating top stations comparison chart...")
     """Create horizontal bar chart comparing seasonal ridership for top stations."""
     # Set up the plot with increased width and height
     fig, ax = plt.subplots(figsize=(18, 20))  # Increased width from 15 to 18
