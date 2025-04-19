@@ -6,6 +6,9 @@ import os
 import gc  # Import garbage collection module
 import io  # Import io for BytesIO
 import traceback  # For better error reporting
+import json
+from datetime import datetime
+import numpy as np  # Add numpy import for handling numpy types
 
 # Define chunk size for processing
 CHUNK_SIZE = 10000000  # Adjust based on available RAM
@@ -74,6 +77,9 @@ def sanitize_name(name):
 # Create a tracking dictionary for processed stations
 processed_stations = {}
 
+# Create a data store for monthly averages to be used in JSON export
+station_monthly_data = {}  # {year: {month: {station_id: {name: str, daily_avg: float, hourly_data: {}}}}}
+
 # Required columns - only read what we need
 required_cols = ['transit_timestamp', 'station_complex_id', 'station_complex', 'ridership']
 
@@ -88,6 +94,9 @@ try:
     print(f"Sample timestamp: {sample_timestamp}")
 except Exception as e:
     print(f"Error reading sample data: {str(e)}")
+
+# Initialize global months_seen to keep track across years
+all_months_seen = set()
 
 # Process data for both 2023 and 2024
 for year in [2023,2024]:
@@ -175,6 +184,7 @@ for year in [2023,2024]:
             # Update months we've seen
             new_months = sorted(months.unique())
             months_seen.update(new_months)
+            all_months_seen.update(new_months)
             print(f"Found months in chunk {chunks_processed}: {new_months}")
             
             # Manual approach for aggregation instead of using groupby
@@ -240,6 +250,10 @@ for year in [2023,2024]:
     print(f"Months with data: {sorted(months_seen)}")
     print(f"Number of station-month combinations: {len(month_station_data)}")
     
+    # Initialize year data in station_monthly_data
+    if year not in station_monthly_data:
+        station_monthly_data[year] = {}
+    
     # Create presentations for each month
     months_with_data = sorted(months_seen)
     
@@ -261,6 +275,10 @@ for year in [2023,2024]:
             
         print(f"Found {len(month_stations)} stations with data for {month}/{year}")
         
+        # Initialize month data in station_monthly_data
+        if month not in station_monthly_data[year]:
+            station_monthly_data[year][month] = {}
+        
         # Create PowerPoint presentation
         ppt = Presentation()
         chart_count = 0
@@ -278,11 +296,14 @@ for year in [2023,2024]:
             
             # Calculate averages from sums and counts
             station_data = []
+            hourly_data = {}
             for hour in hours:
                 sum_val = station_info["sums"][hour]
                 count = station_info["counts"][hour]
                 if count > 0:
-                    station_data.append({"AM_PM": hour, "ridership": sum_val / count})
+                    avg_value = sum_val / count
+                    station_data.append({"AM_PM": hour, "ridership": avg_value})
+                    hourly_data[hour] = float(avg_value)  # Convert to float for serialization
             
             # Convert to DataFrame
             if not station_data:
@@ -295,6 +316,18 @@ for year in [2023,2024]:
             if len(station_df) < 12:  # Require at least half the hours to have data
                 print(f"Skipping station {station_id} due to insufficient data points ({len(station_df)} hours)")
                 continue
+            
+            # Store data for JSON export
+            if len(hourly_data) >= 12:  # Same condition as for PowerPoint
+                # Calculate daily average
+                daily_avg = float(sum(hourly_data.values()) / len(hourly_data))
+                
+                # Store in the monthly data dictionary
+                station_monthly_data[year][month][station_id] = {
+                    "name": station_name,
+                    "daily_avg": daily_avg,
+                    "hourly_data": hourly_data
+                }
                 
             # Merge with all_hours to ensure all 24 hours are represented
             station_df = all_hours.merge(station_df, on="AM_PM", how="left")
@@ -379,6 +412,68 @@ for year in [2023,2024]:
     # Clear all month data after processing the year
     del month_station_data
     gc.collect()
+
+# Export monthly station data to JSON
+# Create JSON structure
+json_output = {}
+
+# Process the station_monthly_data dictionary which maintained data across years
+for year, year_data in station_monthly_data.items():
+    monthly_output = {}
+    
+    for month, month_data in year_data.items():
+        if not month_data:  # Skip empty months
+            continue
+            
+        month_name = {
+            1: "January", 2: "February", 3: "March", 4: "April",
+            5: "May", 6: "June", 7: "July", 8: "August",
+            9: "September", 10: "October", 11: "November", 12: "December"
+        }.get(month, f"Month_{month}")
+        
+        # Format the data for output
+        month_output = []
+        for station_id, station_info in month_data.items():
+            station_record = {
+                "station_name": station_info["name"],
+                "station_id": station_id,
+                "daily_average": station_info["daily_avg"],
+                "hourly_data": station_info["hourly_data"]
+            }
+            month_output.append(station_record)
+            
+        # Sort by daily average, descending
+        month_output.sort(key=lambda x: x["daily_average"], reverse=True)
+        monthly_output[month_name] = month_output
+    
+    # Add year data to output if non-empty
+    if monthly_output:
+        json_output[f"{year} Monthly Ridership"] = monthly_output
+
+# Handle serialization issues
+def convert_for_json(obj):
+    if isinstance(obj, dict):
+        return {k: convert_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_for_json(item) for item in obj]
+    elif isinstance(obj, (np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.float64, np.float32)):
+        return float(obj)
+    else:
+        return obj
+
+json_output = convert_for_json(json_output)
+
+# Save JSON to file
+current_datetime = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+json_filename = f"MTA_Monthly_Station_Ridership_{current_datetime}.json"
+json_path = os.path.join(file_path_OutPut, json_filename)
+
+with open(json_path, 'w', encoding='utf-8') as f:
+    json.dump(json_output, f, indent=2)
+
+print(f"JSON data exported to: {json_path}")
 
 # Print summary
 print(f"Total unique station-month combinations processed: {len(processed_stations)}")

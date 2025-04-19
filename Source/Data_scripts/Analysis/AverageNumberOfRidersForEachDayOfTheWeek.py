@@ -218,6 +218,50 @@ def main():
     # Create PowerPoint
     ppt_path = create_powerpoint(chart_path_2023, chart_path_2024, base_dir)
 
+    # Export data to JSON
+    import json
+
+    # Create JSON structure
+    json_output = {
+        "2023 Average Ridership": avg_ridership_2023.reset_index().rename(
+            columns={"day_of_week": "Day of the Week", "ridership": "Average Ridership"}
+        ).to_dict(orient='records'),
+        "2024 Average Ridership": avg_ridership_2024.reset_index().rename(
+            columns={"day_of_week": "Day of the Week", "ridership": "Average Ridership"}
+        ).to_dict(orient='records')
+    }
+
+    # Handle numpy data types for JSON serialization
+    import numpy as np
+    def convert_nan(obj):
+        if isinstance(obj, dict):
+            return {k: convert_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_nan(item) for item in obj]
+        elif isinstance(obj, np.ndarray):
+            return convert_nan(obj.tolist())
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif pd.isna(obj):
+            return None
+        else:
+            return obj
+
+    json_output = convert_nan(json_output)
+
+    # Generate JSON file name with timestamp
+    current_time = datetime.now()  # Ensure current_time is defined
+    json_filename = f"MTA_Weekday_Average_Ridership_{current_time.strftime('%Y_%m_%d')}.json"
+    json_path = os.path.join(os.path.join(base_dir, "Data", "reports"), json_filename)
+
+    # Save JSON file
+    with open(json_path, 'w', encoding='utf-8') as json_file:
+        json.dump(json_output, json_file, indent=2)
+
+    print("✅ JSON file saved at:", json_path)
+
     # Print output paths
     print("✅ Excel file saved at:", excel_path)
     print("✅ PowerPoint file saved at:", ppt_path)

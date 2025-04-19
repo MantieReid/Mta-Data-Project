@@ -7,3 +7,53 @@ Untitled.ipynb
 Source/Data/Raw/MTA_Subway_Hourly_Ridership__2020-2024.csv
 Source/Data_scripts/Analysis/__pycache__/SeasonalData.cpython-313.pyc
 *.pyc
+*.vsidx
+*.db
+*.bin
+*.ipch
+.vs/Source/Data_scripts/Charts/In_PowerPoint_Format/VSWorkspaceState.json
+.vs/slnx.sqlite
+Data.zip
+DownloadDataFromMtaThenSaveIt.py
+Source/Data/reports/Average Daily Subway Ridership by Day of Week_For_2023_and_2024April 02, 2025 08-43 PM.pptx
+Source/Data/reports/avg_ridership_2024Made_On_April 02, 2025 08-54 PM.xlsx
+Source/Data/reports/avg_ridership_2023Made_On_April 02, 2025 08-54 PM.xlsx
+Source/Data/reports/MTA_Hourly_Average_Ridership_2025_04_02_08_50_52_PM.json
+Source/Data/reports/MTA_Ridership_1_2023.pptx
+Source/Data/reports/MTA_Monthly_Station_Ridership_2025_04_02_22_04_57.json
+Source/Data/reports/MTA_Ridership_2_2023.pptx
+Source/Data/reports/MTA_Ridership_3_2023.pptx
+Source/Data/reports/MTA_Ridership_5_2023.pptx
+Source/Data/reports/MTA_Ridership_4_2023.pptx
+Source/Data/reports/MTA_Ridership_6_2023.pptx
+Source/Data/reports/MTA_Ridership_8_2023.pptx
+Source/Data/reports/MTA_Ridership_7_2023.pptx
+Source/Data/reports/MTA_Station_Ridership_Analysis_2025_04_02.json
+Source/Data/reports/MTA_Station_Ridership_Yearly_Analysis_For_2023_and_2024April 02, 2025 08-12 PM.xlsx
+Source/Data/reports/MTA_Subway_Ridership_Weekday_Stats_average_April 02, 2025 08-43 PM.xlsx
+Source/Data/reports/MTA_Weekday_Average_Ridership_2025_04_02.json
+Source/Data/reports/ridership_chart_2023.png
+Source/Data/reports/Seasonal_Ridership_Data_April 02, 2025 08-28 PM.json
+Source/Data/reports/ridership_chart_2024.png
+Source/Data/reports/Seasonal_Ridership_Data_by_Station_April 02, 2025 08-26 PM.xlsx
+Source/Data/reports/top_10_ridership_chart.png
+Source/Data/reports/~$MTA_Station_Ridership_Yearly_Analysis_For_2023_and_2024April 02, 2025 08-12 PM.xlsx
+Source/Data/reports/~$MTA_Ridership_6_2023.pptx
+Source/Data/reports/~$MTA_Subway_Ridership_Weekday_Stats_average_April 02, 2025 08-43 PM.xlsx
+Source/Data/reports/~$Seasonal_Ridership_Data_by_Station_April 02, 2025 08-26 PM.xlsx
+Source/Data_scripts/Charts/In_PowerPoint_Format/CreateChartsForEachMonthINPowerPoint.py
+Source/Data_scripts/Charts/In_PowerPoint_Format/CreateChartsForEachMonthJSON.py
+*.cmake
+*.obj
+*.ilk
+*.recipe
+*.tlog
+*.json
+*.pdb
+*.idb
+*.natvis
+*.list
+*.log
+Source/Data_scripts/Charts/In_PowerPoint_Format/CreateJSONForEachMonthC++Style.cpp
+Source/Data_scripts/Charts/In_PowerPoint_Format/ConsoleApplication1/x64/Debug/ConsoleApplication1.exe
+Source/Data_scripts/Charts/In_PowerPoint_Format/CMakeLists.txt

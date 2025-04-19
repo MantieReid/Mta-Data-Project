@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import matplotlib.ticker as ticker
 from datetime import datetime
+import json
+import numpy as np
 
 # Add watermark text constant
 WATERMARK_TEXT = "Mantie Reid II"
@@ -44,18 +46,45 @@ def define_paths():
     if not file_path.exists():
         raise FileNotFoundError(f"🚨 File not found: {file_path}")
 
-    return file_path, output_file, output_dir
+    return file_path, output_file, output_dir, current_time
 
 def load_data(file_path, chunksize=100000):
     print(f"📊 Loading data from: {file_path}")
     date_column = "transit_timestamp"
     ridership_column = "ridership"
     station_column = "station_complex"
+    
+    # Geographic columns
+    lat_column = "latitude"
+    lon_column = "longitude"
+    georef_column = "georeference"
+    borough_column = "borough"
+    
     date_format = '%m/%d/%Y %I:%M:%S %p'
 
     total_ridership_per_year = {}
     stations_2023 = {}
     stations_2024 = {}
+    
+    # Store geo data for each station
+    station_geo_data = {}
+    
+    # First read a small chunk to check available columns
+    first_chunk = pd.read_csv(file_path, nrows=5)
+    available_columns = first_chunk.columns.tolist()
+    
+    # Check which geo columns are available
+    geo_columns = [station_column]
+    if lat_column in available_columns:
+        geo_columns.append(lat_column)
+    if lon_column in available_columns:
+        geo_columns.append(lon_column)
+    if georef_column in available_columns:
+        geo_columns.append(georef_column)
+    if borough_column in available_columns:
+        geo_columns.append(borough_column)
+    
+    print(f"Available geo columns: {geo_columns}")
 
     for chunk in pd.read_csv(
         file_path, 
@@ -69,17 +98,38 @@ def load_data(file_path, chunksize=100000):
         for year, ridership in yearly_ridership.items():
             total_ridership_per_year[year] = total_ridership_per_year.get(year, 0) + ridership
 
+        # Process 2023 data
         stations_2023_chunk = chunk[chunk["year"] == 2023].groupby(station_column)[ridership_column].sum()
         for station, ridership in stations_2023_chunk.items():
             stations_2023[station] = stations_2023.get(station, 0) + ridership
 
+        # Process 2024 data
         stations_2024_chunk = chunk[chunk["year"] == 2024].groupby(station_column)[ridership_column].sum()
         for station, ridership in stations_2024_chunk.items():
             stations_2024[station] = stations_2024.get(station, 0) + ridership
 
-    return total_ridership_per_year, stations_2023, stations_2024
+        # Collect geo data for each station - only use available columns
+        station_geo_chunk = chunk[geo_columns].drop_duplicates(subset=[station_column])
+        for _, row in station_geo_chunk.iterrows():
+            station = row[station_column]
+            if station not in station_geo_data:
+                station_data = {"station_complex": station}
+                
+                # Add available geo data
+                if lat_column in geo_columns:
+                    station_data["latitude"] = row[lat_column]
+                if lon_column in geo_columns:
+                    station_data["longitude"] = row[lon_column]
+                if georef_column in geo_columns:
+                    station_data["georeference"] = row[georef_column]
+                if borough_column in geo_columns:
+                    station_data["borough"] = row[borough_column]
+                
+                station_geo_data[station] = station_data
 
-def process_data(total_ridership_per_year, stations_2023, stations_2024):
+    return total_ridership_per_year, stations_2023, stations_2024, station_geo_data
+
+def process_data(total_ridership_per_year, stations_2023, stations_2024, station_geo_data):
     print("📈 Processing data...")
     official_ridership_2023 = total_ridership_per_year.get(2023, 0)
     official_ridership_2024 = total_ridership_per_year.get(2024, 0)
@@ -87,11 +137,29 @@ def process_data(total_ridership_per_year, stations_2023, stations_2024):
     print(f"✅ Total Subway Ridership in 2023: {official_ridership_2023:,}")
     print(f"✅ Total Subway Ridership in 2024: {official_ridership_2024:,}")
 
+    # Convert to DataFrames
     stations_2023 = pd.DataFrame(list(stations_2023.items()), columns=["station_complex", "ridership"])
     stations_2024 = pd.DataFrame(list(stations_2024.items()), columns=["station_complex", "ridership"])
 
+    # Calculate percentages
     stations_2023["percentage"] = (stations_2023["ridership"] / official_ridership_2023) if official_ridership_2023 > 0 else 0
     stations_2024["percentage"] = (stations_2024["ridership"] / official_ridership_2024) if official_ridership_2024 > 0 else 0
+
+    # Add geo data to DataFrames
+    for df in [stations_2023, stations_2024]:
+        # Dynamically add available geo fields from station_geo_data
+        for station_idx, row in df.iterrows():
+            station = row["station_complex"]
+            if station in station_geo_data:
+                # Get all available fields for this station
+                geo_info = station_geo_data[station]
+                for field, value in geo_info.items():
+                    if field != "station_complex":  # Skip the key field
+                        # Add column if it doesn't exist
+                        if field not in df.columns:
+                            df[field] = None
+                        # Set the value for this station
+                        df.at[station_idx, field] = value
 
     # Keep ridership as numeric values
     top5_2023 = stations_2023.sort_values(by="ridership", ascending=False).head(15)
@@ -124,8 +192,10 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
                     columns.append({'header': col})
                 elif col == "percentage":
                     columns.append({'header': col, 'format': percent_format})
-                else:
+                elif col in ["ridership"]:
                     columns.append({'header': col, 'format': number_format})
+                else:
+                    columns.append({'header': col})
 
             table_style = 'Table Style Medium 2' if not use_color else 'Table Style Medium 4'
             worksheet.add_table(table_range, {
@@ -217,40 +287,96 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
         hours = list(range(1, 24)) + [0]
         hourly_data = hourly_data.reindex(hours)
 
-        # Removed hourly chart code as requested
-
         worksheet_chart = workbook.add_worksheet("Top 10 Chart")
         worksheet_chart.insert_image("B2", str(chart_path))
 
     # Export data to JSON
-    import json
-    from datetime import datetime
+    export_to_json(stations_2023, stations_2024, top5_2023, top5_2024, output_dir, current_time)
 
+def convert_nan(obj):
+    """Convert NaN values to a serializable format"""
+    if isinstance(obj, dict):
+        return {k: convert_nan(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_nan(item) for item in obj]
+    elif isinstance(obj, np.ndarray):
+        return convert_nan(obj.tolist())
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif pd.isna(obj):
+        return None
+    else:
+        return obj
+
+def export_to_json(stations_2023, stations_2024, top5_2023, top5_2024, output_dir, current_time):
+    """Export data to a JSON file with geo coordinates"""
+    
+    # Create the JSON structure with all required data including geo coordinates
     json_output = {
-        "2023 Ridership": stations_2023.to_dict(orient='records'),
-        "2024 Ridership": stations_2024.to_dict(orient='records'),
-        "Top 5 Stations 2023": top5_2023.to_dict(orient='records'),
-        "Top 5 Stations 2024": top5_2024.to_dict(orient='records')
+        "metadata": {
+            "generated_at": current_time.isoformat(),
+            "description": "MTA Subway Station Ridership Analysis with Geographic Data",
+            "creator": WATERMARK_TEXT
+        },
+        "all_stations": {
+            "2023": stations_2023.to_dict(orient='records'),
+            "2024": stations_2024.to_dict(orient='records')
+        },
+        "top_stations": {
+            "2023": top5_2023.to_dict(orient='records'),
+            "2024": top5_2024.to_dict(orient='records')
+        },
+        # Add a dedicated geoJSON section for mapping
+        "geoJSON": {
+            "type": "FeatureCollection",
+            "features": []
+        }
     }
+    
+    # Add GeoJSON features for all 2023 stations (can be easily mapped)
+    for _, station in stations_2023.iterrows():
+        # Check if latitude and longitude columns exist and are not null
+        has_coords = (
+            "latitude" in station.index and 
+            "longitude" in station.index and 
+            not pd.isna(station["latitude"]) and 
+            not pd.isna(station["longitude"])
+        )
+        
+        if not has_coords:
+            # Skip stations without coordinates, but log them
+            print(f"Skipping station without coordinates: {station['station_complex']}")
+            continue
+            
+        # Create properties dictionary with all available data
+        properties = {"station_name": station["station_complex"]}
+        
+        # Add all station data to properties
+        for col in station.index:
+            if col not in ["latitude", "longitude"]:
+                properties[f"{col}_2023"] = station[col]
+        
+        # Add 2024 data if available
+        if station["station_complex"] in stations_2024["station_complex"].values:
+            station_2024 = stations_2024.loc[stations_2024["station_complex"] == station["station_complex"]].iloc[0]
+            for col in station_2024.index:
+                if col not in ["station_complex", "latitude", "longitude"]:
+                    properties[f"{col}_2024"] = station_2024[col]
+        
+        # Create the GeoJSON feature
+        feature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [float(station["longitude"]), float(station["latitude"])]
+            },
+            "properties": properties
+        }
+        json_output["geoJSON"]["features"].append(feature)
 
-    # Convert NaN values to a serializable format
-    import numpy as np
-    def convert_nan(obj):
-        if isinstance(obj, dict):
-            return {k: convert_nan(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_nan(item) for item in obj]
-        elif isinstance(obj, np.ndarray):
-            return convert_nan(obj.tolist())
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif pd.isna(obj):
-            return None
-        else:
-            return obj
-
+    # Convert NaN values to None for JSON serialization
     json_output = convert_nan(json_output)
 
     # Generate JSON file path
@@ -261,16 +387,16 @@ def write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_20
     with open(json_file_path, 'w', encoding='utf-8') as json_file:
         json.dump(json_output, json_file, indent=2)
 
-    print(f"✅ JSON output saved to: {json_file_path}")
-
-    print(f"✅ Updated file with full ridership data, percentages, top stations, and charts saved to: {output_file}")
+    print(f"✅ Enhanced JSON output with geo coordinates saved to: {json_file_path}")
 
 def main():
-    file_path, output_file, output_dir = define_paths()
-    current_time = datetime.now()  # Define current_time
-    total_ridership_per_year, stations_2023, stations_2024 = load_data(file_path)
-    stations_2023, stations_2024, top5_2023, top5_2024, top10_2023, top10_2024 = process_data(total_ridership_per_year, stations_2023, stations_2024)
-    write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_2024, top10_2023, top10_2024, output_dir, file_path, "ridership", current_time)
+    file_path, output_file, output_dir, current_time = define_paths()
+    total_ridership_per_year, stations_2023, stations_2024, station_geo_data = load_data(file_path)
+    stations_2023, stations_2024, top5_2023, top5_2024, top10_2023, top10_2024 = process_data(
+        total_ridership_per_year, stations_2023, stations_2024, station_geo_data
+    )
+    write_to_excel(output_file, stations_2023, stations_2024, top5_2023, top5_2024, 
+                  top10_2023, top10_2024, output_dir, file_path, "ridership", current_time)
 
 if __name__ == "__main__":
     main()

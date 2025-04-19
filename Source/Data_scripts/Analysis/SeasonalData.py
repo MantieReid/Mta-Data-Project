@@ -321,6 +321,62 @@ def save_results_to_excel(results_2023, results_2024, output_path):
             worksheet.set_column('B:B', 120)
             worksheet.set_row(0, 20)
 
+    # Export data to JSON
+    import json
+    from datetime import datetime
+
+    # Create JSON output structure
+    json_output = {
+        "Ridership_2023": pd.DataFrame.from_dict(results_2023, orient='index').reset_index().rename(columns={"index": "Station"}).to_dict(orient='records'),
+        "Ridership_2024": pd.DataFrame.from_dict(results_2024, orient='index').reset_index().rename(columns={"index": "Station"}).to_dict(orient='records'),
+        "Comparison": pd.DataFrame({
+            'Season': pd.DataFrame.from_dict(results_2023, orient='index').sum(numeric_only=True).index,
+            '2023': pd.DataFrame.from_dict(results_2023, orient='index').sum(numeric_only=True).values,
+            '2024': pd.DataFrame.from_dict(results_2024, orient='index').sum(numeric_only=True).values
+        }).to_dict(orient='records')
+    }
+
+    # Handle numpy data types for JSON serialization
+    import numpy as np
+    def convert_nan(obj):
+        if isinstance(obj, dict):
+            return {k: convert_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_nan(item) for item in obj]
+        elif isinstance(obj, np.ndarray):
+            return convert_nan(obj.tolist())
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif pd.isna(obj):
+            return None
+        else:
+            return obj
+
+    json_output = convert_nan(json_output)
+
+    # Generate a unique filename
+    date_time_str = datetime.now().strftime("%B %d, %Y %I-%M %p")
+    json_base_filename = f"Seasonal_Ridership_Data_{date_time_str}.json"
+    
+    # Extract output directory from the Excel output path
+    output_dir = os.path.dirname(output_path)
+    json_output_path = os.path.join(output_dir, json_base_filename)
+    
+    # Ensure the filename is unique by appending a number if it already exists
+    counter = 1
+    base, ext = os.path.splitext(json_output_path)
+    while os.path.exists(json_output_path):
+        json_output_path = f"{base}_{counter}{ext}"
+        counter += 1
+
+    # Save the data to a JSON file
+    with open(json_output_path, 'w', encoding='utf-8') as json_file:
+        json.dump(json_output, json_file, indent=2)
+
+    print("JSON data saved to:", json_output_path)
+
 def get_unique_filename(base_path):
     """Generate a unique filename by adding a number if the file exists."""
     directory = os.path.dirname(base_path)
